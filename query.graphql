@@ -1,0 +1,85 @@
+query SearchProducts($pageSize: Int, $currentPage: Int, $storeCode: String = "701", $published: String = "1") {
+  products(
+    filter: {store_code: {eq: $storeCode}, published: {eq: $published}}
+    pageSize: $pageSize
+    currentPage: $currentPage
+  ) {
+    items {
+      item_story_marketing
+      product_label
+      primary_image
+      primary_image_meta {
+        url
+        metadata
+        __typename
+      }
+      published
+      sku
+      url_key
+      name
+      item_description
+      item_title
+      item_characteristics
+      item_story_qil
+      use_and_demo
+      sales_size
+      sales_uom_code
+      sales_uom_description
+      country_of_origin
+      availability
+      new_product
+      promotion
+      price_range {
+        minimum_price {
+          final_price {
+            currency
+            value
+            __typename
+          }
+          __typename
+        }
+        __typename
+      }
+      retail_price
+      nutrition {
+        display_sequence
+        panel_id
+        panel_title
+        serving_size
+        calories_per_serving
+        servings_per_container
+        details {
+          display_seq
+          nutritional_item
+          amount
+          percent_dv
+          __typename
+        }
+        __typename
+      }
+      ingredients {
+        display_sequence
+        ingredient
+        __typename
+      }
+      allergens {
+        display_sequence
+        ingredient
+        __typename
+      }
+      created_at
+      first_published_date
+      last_published_date
+      updated_at
+      __typename
+    }
+    total_count
+    page_info {
+      current_page
+      page_size
+      total_pages
+      __typename
+    }
+    __typename
+  }
+}
