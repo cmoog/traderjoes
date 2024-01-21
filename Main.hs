@@ -6,8 +6,8 @@ module Main where
 
 import Control.Monad (join, when)
 import Data.Aeson
-import Data.ByteString.Lazy.Char8 qualified as LBS
 import Data.ByteString.Char8 qualified as BS
+import Data.ByteString.Lazy.Char8 qualified as LBS
 import Data.Maybe
 import Database.SQLite.Simple qualified as SQL
 import GHC.Generics
@@ -136,9 +136,9 @@ headers =
 openDB :: IO SQL.Connection
 openDB = do
   conn <- SQL.open "traderjoes.db"
-  SQL.execute_ conn "CREATE TABLE IF NOT EXISTS items (sku text, retail_price text, item_title text, raw text, inserted_at integer);"
+  SQL.execute_ conn "CREATE TABLE IF NOT EXISTS items (sku text, retail_price text, item_title text, inserted_at integer);"
   return conn
 
 insert :: SQL.Connection -> Item -> IO ()
 insert conn (Item {sku, item_title, retail_price}) =
-  SQL.execute conn "INSERT INTO items (sku, retail_price, item_title, inserted_at) VALUES (?, ?, ?, DATETIME('now'))" (sku, item_title, retail_price)
+  SQL.execute conn "INSERT INTO items (sku, retail_price, item_title, inserted_at) VALUES (?, ?, ?, DATETIME('now'))" (sku, retail_price, item_title)

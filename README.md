@@ -8,8 +8,8 @@ requesting page 2
 ...
 
 $ sqlite3 traderjoes.db
-> select * from items limit 3
-076249|Emerald Insulated Reusable Bag|7.99||2024-01-21 21:05:53
-078381|Chocolate Berry Lip Mask Duo|7.99||2024-01-21 21:05:53
-078041|Brazil Nut Body Oil|6.99||2024-01-21 21:05:53
+sqlite> select * from items order by item_title limit 3;
+093200|4.49|100% Colombian Instant Coffee|2024-01-21 22:45:30
+156933|3.99|100% Mango Juice from Carabao Mangoes|2024-01-21 22:45:33
+066569|3.99|100% Orange Juice No Pulp|2024-01-21 22:45:28
 ```
