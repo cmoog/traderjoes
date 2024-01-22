@@ -6,7 +6,6 @@ module Main where
 
 import Control.Monad (join, when)
 import Data.Aeson
-import Data.ByteString.Char8 qualified as BS
 import Data.ByteString.Lazy.Char8 qualified as LBS
 import Data.Maybe
 import Database.SQLite.Simple qualified as SQL
@@ -93,23 +92,29 @@ fetch page = do
           }
   hPutStrLn stderr $ "requesting page: " ++ show page
   result <- sendQuery request
-  let resp :: Maybe Response = decode $ LBS.pack result
-  case resp of
+  case decode result of
     Nothing -> return Nothing
     Just (Response (Data (Products {items}))) -> return $ Just items
 
-graphqlUrl :: String
-graphqlUrl = "https://www.traderjoes.com/api/graphql"
+openDB :: IO SQL.Connection
+openDB = do
+  conn <- SQL.open "traderjoes.db"
+  SQL.execute_ conn "CREATE TABLE IF NOT EXISTS items (sku text, retail_price text, item_title text, inserted_at integer);"
+  return conn
 
-sendQuery :: Request -> IO String
+insert :: SQL.Connection -> Item -> IO ()
+insert conn (Item {sku, item_title, retail_price}) =
+  SQL.execute conn "INSERT INTO items (sku, retail_price, item_title, inserted_at) VALUES (?, ?, ?, DATETIME('now'))" (sku, retail_price, item_title)
+
+sendQuery :: Request -> IO LBS.ByteString
 sendQuery query = do
+  url <- HTTP.parseRequest "https://www.traderjoes.com/api/graphql"
   let encoded = encode query
-  rawReq <- HTTP.parseRequest graphqlUrl
-  let req = HTTP.setRequestMethod "POST" . HTTP.setRequestBodyLBS encoded . HTTP.setRequestHeaders headers $ rawReq
-  resp <- HTTP.httpBS req
+  let req = HTTP.setRequestMethod "POST" . HTTP.setRequestBodyLBS encoded . HTTP.setRequestHeaders headers $ url
+  resp <- HTTP.httpLBS req
   let statusCode = HTTP.getResponseStatusCode resp
   when (statusCode /= 200) . fail $ show req ++ "\nrequest failed:\n" ++ show resp
-  return $ BS.unpack $ HTTP.getResponseBody resp
+  return $ HTTP.getResponseBody resp
 
 headers :: [HTTP.Header]
 headers =
@@ -132,13 +137,3 @@ headers =
     ("mode", "cors"),
     ("credentials", "include")
   ]
-
-openDB :: IO SQL.Connection
-openDB = do
-  conn <- SQL.open "traderjoes.db"
-  SQL.execute_ conn "CREATE TABLE IF NOT EXISTS items (sku text, retail_price text, item_title text, inserted_at integer);"
-  return conn
-
-insert :: SQL.Connection -> Item -> IO ()
-insert conn (Item {sku, item_title, retail_price}) =
-  SQL.execute conn "INSERT INTO items (sku, retail_price, item_title, inserted_at) VALUES (?, ?, ?, DATETIME('now'))" (sku, retail_price, item_title)

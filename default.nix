@@ -7,13 +7,13 @@ let
   ]);
 in
 stdenv.mkDerivation {
-  name = "tjoes-prices";
+  name = "traderjoes";
   src = ./.;
   buildInputs = [ ghc ];
   buildPhase = ''
     ghc -threaded ./Main.hs -o ./Main -Wall -Werror
   '';
   installPhase = ''
-    install -Dm555 ./Main $out/bin/tjoes-prices
+    install -Dm555 ./Main $out/bin/traderjoes
   '';
 }
