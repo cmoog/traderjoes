@@ -8,12 +8,12 @@ module Main where
 import Control.Monad (join, when)
 import Data.Aeson
 import Data.ByteString.Lazy.Char8 qualified as LBS
+import Data.FileEmbed (embedStringFile)
 import Data.Maybe
 import Database.SQLite.Simple qualified as SQL
 import GHC.Generics
 import Network.HTTP.Simple qualified as HTTP
 import System.IO
-import Data.FileEmbed (embedStringFile)
 
 newtype Response = Response {rdata :: Data} deriving (Generic, Show)
 
@@ -73,7 +73,7 @@ main = do
 
 fetchAll :: SQL.Connection -> IO ()
 fetchAll conn = do
-  fetches <- mapM fetch [1 .. 18]
+  fetches <- mapM fetch [1 .. 19]
   let items = join $ catMaybes fetches
   mapM_ (insert conn) items
 
