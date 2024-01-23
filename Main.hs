@@ -1,5 +1,6 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TemplateHaskell #-}
 {-# OPTIONS_GHC -Wall #-}
 
 module Main where
@@ -12,6 +13,7 @@ import Database.SQLite.Simple qualified as SQL
 import GHC.Generics
 import Network.HTTP.Simple qualified as HTTP
 import System.IO
+import Data.FileEmbed (embedStringFile)
 
 newtype Response = Response {rdata :: Data} deriving (Generic, Show)
 
@@ -77,7 +79,6 @@ fetchAll conn = do
 
 fetch :: Int -> IO (Maybe [Item])
 fetch page = do
-  query <- readFile "./query.graphql"
   let request =
         Request
           { operationName = "SearchProduct",
@@ -88,7 +89,7 @@ fetch page = do
                   currentPage = page,
                   pageSize = 100
                 },
-            query = query
+            query = $(embedStringFile "./query.graphql")
           }
   hPutStrLn stderr $ "requesting page: " ++ show page
   result <- sendQuery request
