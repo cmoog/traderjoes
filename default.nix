@@ -3,6 +3,7 @@ let
   ghc = haskellPackages.ghcWithPackages (p: with p; [
     sqlite-simple
     http-conduit
+    file-embed
     aeson
   ]);
 in
