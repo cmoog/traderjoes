@@ -5,14 +5,8 @@ query SearchProducts($pageSize: Int, $currentPage: Int, $storeCode: String = "70
     currentPage: $currentPage
   ) {
     items {
-      item_story_marketing
       product_label
       primary_image
-      primary_image_meta {
-        url
-        metadata
-        __typename
-      }
       published
       sku
       url_key
@@ -20,8 +14,6 @@ query SearchProducts($pageSize: Int, $currentPage: Int, $storeCode: String = "70
       item_description
       item_title
       item_characteristics
-      item_story_qil
-      use_and_demo
       sales_size
       sales_uom_code
       sales_uom_description
@@ -41,32 +33,6 @@ query SearchProducts($pageSize: Int, $currentPage: Int, $storeCode: String = "70
         __typename
       }
       retail_price
-      nutrition {
-        display_sequence
-        panel_id
-        panel_title
-        serving_size
-        calories_per_serving
-        servings_per_container
-        details {
-          display_seq
-          nutritional_item
-          amount
-          percent_dv
-          __typename
-        }
-        __typename
-      }
-      ingredients {
-        display_sequence
-        ingredient
-        __typename
-      }
-      allergens {
-        display_sequence
-        ingredient
-        __typename
-      }
       created_at
       first_published_date
       last_published_date

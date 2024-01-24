@@ -7,7 +7,7 @@ module Main where
 
 import Control.Monad (join, when)
 import Data.Aeson
-import Data.ByteString.Lazy.Char8 qualified as LBS
+import Data.ByteString.Lazy (ByteString)
 import Data.FileEmbed (embedStringFile)
 import Data.Maybe
 import Database.SQLite.Simple qualified as SQL
@@ -73,12 +73,12 @@ main = do
 
 fetchAll :: SQL.Connection -> IO ()
 fetchAll conn = do
-  fetches <- mapM fetch [1 .. 19]
-  let items = join $ catMaybes fetches
-  mapM_ (insert conn) items
+  items <- mapM fetch [1 .. 25]
+  mapM_ (insert conn) . join . catMaybes $ items
 
 fetch :: Int -> IO (Maybe [Item])
 fetch page = do
+  hPutStrLn stderr $ "requesting page: " ++ show page
   let request =
         Request
           { operationName = "SearchProduct",
@@ -91,11 +91,8 @@ fetch page = do
                 },
             query = $(embedStringFile "./query.graphql")
           }
-  hPutStrLn stderr $ "requesting page: " ++ show page
   result <- sendQuery request
-  case decode result of
-    Nothing -> return Nothing
-    Just (Response (Data (Products {items}))) -> return $ Just items
+  return $ items . products . rdata <$> decode result
 
 openDB :: IO SQL.Connection
 openDB = do
@@ -107,7 +104,7 @@ insert :: SQL.Connection -> Item -> IO ()
 insert conn (Item {sku, item_title, retail_price}) =
   SQL.execute conn "INSERT INTO items (sku, retail_price, item_title, inserted_at) VALUES (?, ?, ?, DATETIME('now'))" (sku, retail_price, item_title)
 
-sendQuery :: Request -> IO LBS.ByteString
+sendQuery :: Request -> IO ByteString
 sendQuery query = do
   url <- HTTP.parseRequest "https://www.traderjoes.com/api/graphql"
   let encoded = encode query
