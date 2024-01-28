@@ -97,7 +97,7 @@ fetch page = do
 openDB :: IO SQL.Connection
 openDB = do
   conn <- SQL.open "traderjoes.db"
-  SQL.execute_ conn "CREATE TABLE IF NOT EXISTS items (sku text, retail_price text, item_title text, inserted_at integer);"
+  SQL.execute_ conn $(embedStringFile "./schema.sql")
   return conn
 
 insert :: SQL.Connection -> Item -> IO ()
