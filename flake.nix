@@ -8,7 +8,7 @@
     flake-utils.lib.eachDefaultSystem
       (system:
         let
-          pkgs = nixpkgs.legacyPackages.${system};
+          pkgs = import nixpkgs { inherit system; };
         in
         rec {
           formatter = pkgs.nixpkgs-fmt;
@@ -19,6 +19,7 @@
               hlint
               packages.default.buildInputs
               sqlite
+              nodePackages.wrangler
             ];
           };
         }

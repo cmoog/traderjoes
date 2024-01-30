@@ -8,12 +8,15 @@ module Main where
 import Control.Monad (join, when)
 import Data.Aeson
 import Data.ByteString.Lazy (ByteString)
+import Data.ByteString.Lazy qualified as L
 import Data.FileEmbed (embedStringFile)
 import Data.Maybe
 import Database.SQLite.Simple qualified as SQL
 import GHC.Generics
 import Network.HTTP.Simple qualified as HTTP
+import System.Environment (getArgs)
 import System.IO
+import TraderJoesCom (renderPage)
 
 newtype Response = Response {rdata :: Data} deriving (Generic, Show)
 
@@ -23,11 +26,8 @@ data Products = Products {items :: [Item], total_count :: Int} deriving (Generic
 
 data Item = Item
   { retail_price :: String,
-    name :: String,
     item_title :: String,
     sku :: String,
-    created_at :: String,
-    updated_at :: String,
     url_key :: String
   }
   deriving (Generic, Show)
@@ -65,11 +65,39 @@ instance ToJSON Variables
 
 main :: IO ()
 main = do
-  hPutStrLn stderr "running"
+  args <- getArgs
+  when (length args /= 1) $ fail "provide exactly 1 argument ('fetch' | 'gen')"
   conn <- openDB
-  fetchAll conn
-  SQL.close conn
-  hPutStrLn stderr "done"
+  case listToMaybe args of
+    Just "gen" -> do
+      prices <- latestPrices conn
+      SQL.close conn
+      let html = renderPage $ display <$> prices
+      L.putStr html
+    Just "fetch" -> do
+      hPutStrLn stderr "running"
+      fetchAll conn
+      SQL.close conn
+      hPutStrLn stderr "done"
+    _ -> putStrLn "run with 'fetch' or 'gen'"
+
+display :: DBItem -> [String]
+display (DBItem {dsku, ditem_title, dretail_price}) = [dsku, ditem_title, dretail_price]
+
+data DBItem = DBItem
+  { dsku :: String,
+    ditem_title :: String,
+    dretail_price :: String,
+    dinserted_at :: String
+  }
+  deriving (Generic, Show)
+
+instance SQL.FromRow DBItem
+
+instance SQL.ToRow DBItem
+
+latestPrices :: SQL.Connection -> IO [DBItem]
+latestPrices conn = SQL.query conn $(embedStringFile "./latest-prices.sql") ()
 
 fetchAll :: SQL.Connection -> IO ()
 fetchAll conn = do

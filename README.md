@@ -1,7 +1,7 @@
 # Trader Joe's Price Tracking
 
 ```console
-$ nix run .
+$ nix run . -- fetch
 runnning
 requesting page 1
 requesting page 2

@@ -2,6 +2,7 @@
 let
   ghc = haskellPackages.ghcWithPackages (p: with p; [
     sqlite-simple
+    blaze-html
     http-conduit
     file-embed
     aeson

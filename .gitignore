@@ -1,1 +1,7 @@
 *.db
+*.hi
+*.o
+*.dyn_o
+*.dyn_hi
+Main
+site/
