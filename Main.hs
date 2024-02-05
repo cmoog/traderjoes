@@ -28,7 +28,13 @@ main = do
       prices <- latestPrices conn
       changes <- priceChanges conn
       SQL.close conn
-      let html = renderPage [H.h1 "Price Changes", renderTable ["Date Changed", "Item Name" :: String, "Old Price", "New Price"] (displayPriceChange <$> changes), H.h1 "All Items", renderTable ["Item Name" :: String, "Retail Price"] (display <$> prices)]
+      let html =
+            renderPage
+              [ H.h1 "Price Changes",
+                renderTable ["Date Changed", "Item Name" :: String, "Old Price", "New Price"] (displayPriceChange <$> changes),
+                H.h1 "All Items",
+                renderTable ["Item Name" :: String, "Retail Price"] (displayDBItem <$> prices)
+              ]
       removeDirectoryRecursive "site"
       createDirectory "site"
       L.writeFile "site/index.html" html
@@ -39,8 +45,8 @@ main = do
       hPutStrLn stderr "done"
     _ -> fail "run with 'fetch', 'gen'"
 
-display :: DBItem -> [String]
-display (DBItem {ditem_title, dretail_price}) = [ditem_title, dretail_price]
+displayDBItem :: DBItem -> [String]
+displayDBItem (DBItem {ditem_title, dretail_price}) = [ditem_title, dretail_price]
 
 displayPriceChange :: PriceChange -> [String]
 displayPriceChange (PriceChange {pitem_title, pbefore_price, pafter_price, pafter_date}) = [pafter_date, pitem_title, pbefore_price, pafter_price]

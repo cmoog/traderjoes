@@ -17,9 +17,9 @@
             packages = [
               haskell-language-server
               hlint
+              nodePackages.wrangler
               packages.default.buildInputs
               sqlite
-              nodePackages.wrangler
             ];
           };
         }
