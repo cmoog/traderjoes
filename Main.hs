@@ -10,6 +10,7 @@ import Data.ByteString.Lazy (ByteString)
 import Data.ByteString.Lazy qualified as L
 import Data.FileEmbed (embedStringFile)
 import Data.Maybe
+import Data.Time (getCurrentTime, getCurrentTimeZone, utcToLocalTime)
 import Database.SQLite.Simple qualified as SQL
 import GHC.Generics
 import Prices (Item (..), allItems)
@@ -30,7 +31,9 @@ main = do
       prices <- latestPrices conn
       changes <- priceChanges conn
       SQL.close conn
+      ts <- showTime
       let html = renderPage $ do
+            H.i . H.toMarkup $ "Last updated: " ++ ts
             H.h1 "Price Changes"
             H.table H.! A.class_ "table table-striped table-gray" $ do
               H.thead . H.tr . H.toMarkup $ H.th <$> (H.toMarkup <$> ["Date Changed" :: String, "Item Name", "Old Price", "New Price"])
@@ -54,6 +57,7 @@ renderPage page = renderHtml $ H.html $ do
   H.head $ do
     H.meta H.! A.charset "UTF-8"
     H.meta H.! A.name "viewport" H.! A.content "width=device-width, initial-scale=1.0"
+    H.meta H.! A.name "description" H.! A.content "Daily Tracking of Trader Joe's Price Changes"
     H.title "Trader Joe's Prices"
   H.body $ do
     H.style $(embedStringFile "./style.css")
@@ -120,3 +124,10 @@ openDB = do
 insert :: SQL.Connection -> Item -> IO ()
 insert conn (Item {sku, item_title, retail_price}) =
   SQL.execute conn "INSERT INTO items (sku, retail_price, item_title, inserted_at) VALUES (?, ?, ?, DATETIME('now'))" (sku, retail_price, item_title)
+
+-- | show a timestamp in the current system timezone
+showTime :: IO String
+showTime = do
+  zone <- getCurrentTimeZone
+  utc <- getCurrentTime
+  return $ show (utcToLocalTime zone utc) <> " " <> show zone
