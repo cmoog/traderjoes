@@ -8,6 +8,10 @@ a:hover {
   cursor: pointer;
 }
 
+.underline {
+  text-decoration: underline;
+}
+
 .table {
   width: 100%;
   border-spacing: 0;

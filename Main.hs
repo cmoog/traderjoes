@@ -34,6 +34,8 @@ main = do
       ts <- showTime
       let html = renderPage $ do
             H.i . H.toMarkup $ "Last updated: " ++ ts
+            H.br
+            H.a H.! A.class_ "underline" H.! A.href "https://github.com/cmoog/traderjoes" H.! A.target "_blank" $ "Source code"
             H.h1 "Price Changes"
             H.table H.! A.class_ "table table-striped table-gray" $ do
               H.thead . H.tr . H.toMarkup $ H.th <$> (H.toMarkup <$> ["Date Changed" :: String, "Item Name", "Old Price", "New Price"])
