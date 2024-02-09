@@ -20,6 +20,7 @@ import System.IO
 import Text.Blaze.Html.Renderer.Utf8 (renderHtml)
 import Text.Blaze.Html5 qualified as H
 import Text.Blaze.Html5.Attributes qualified as A
+import Text.Blaze.Internal qualified as A
 
 main :: IO ()
 main = do
@@ -36,6 +37,8 @@ main = do
             H.i . H.toMarkup $ "Last updated: " ++ ts
             H.br
             H.a H.! A.class_ "underline" H.! A.href "https://github.com/cmoog/traderjoes" H.! A.target "_blank" $ "Source code"
+            H.br
+            H.a H.! A.class_ "underline" H.! A.href "https://data.traderjoesprices.com/dump.csv" H.! download "traderjoes-dump.csv" $ "Download full history (.csv)"
             H.h1 "Price Changes"
             H.table H.! A.class_ "table table-striped table-gray" $ do
               H.thead . H.tr . H.toMarkup $ H.th <$> (H.toMarkup <$> ["Date Changed" :: String, "Item Name", "Old Price", "New Price"])
@@ -131,3 +134,7 @@ showTime = do
   zone <- getCurrentTimeZone
   utc <- getCurrentTime
   return $ show (utcToLocalTime zone utc) <> " " <> show zone
+
+-- | this should be patched upstream in Blaze
+download :: H.AttributeValue -> H.Attribute
+download = A.attribute "download" " download=\""
