@@ -21,6 +21,8 @@ FROM
 WHERE
   retail_price != next_price
   AND next_price IS NOT NULL
+  AND retail_price != "0.01"
+  AND next_price != "0.01"
 ORDER BY
   next_inserted_at
 DESC;

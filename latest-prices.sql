@@ -8,4 +8,5 @@ FROM (
   SELECT *, ROW_NUMBER() OVER (PARTITION BY sku ORDER BY inserted_at DESC) as rn
   FROM items
 ) tmp
-WHERE rn = 1;
+WHERE
+  rn = 1 AND retail_price != "0.01";

@@ -71,12 +71,11 @@ displayDBItem (DBItem {ditem_title, dretail_price, dsku}) = H.tr $ do
   H.td $ H.toHtml dretail_price
 
 displayPriceChange :: PriceChange -> H.Html
-displayPriceChange (PriceChange {pitem_title, pbefore_price, pafter_price, pafter_date, psku}) = H.html $ do
-  H.tr $ do
-    H.td $ H.toHtml pafter_date
-    H.td $ H.a H.! A.href (productUrl psku) H.! A.target "_blank" $ H.toHtml pitem_title
-    H.td $ H.toHtml pbefore_price
-    H.td $ H.toHtml pafter_price
+displayPriceChange (PriceChange {pitem_title, pbefore_price, pafter_price, pafter_date, psku}) = H.tr $ do
+  H.td $ H.toHtml pafter_date
+  H.td $ H.a H.! A.href (productUrl psku) H.! A.target "_blank" $ H.toHtml pitem_title
+  H.td $ H.toHtml pbefore_price
+  H.td $ H.toHtml pafter_price
 
 productUrl :: String -> H.AttributeValue
 productUrl sku = H.toValue $ "https://traderjoes.com/home/products/pdp/" ++ sku
@@ -109,7 +108,7 @@ data PriceChange = PriceChange
 instance SQL.FromRow PriceChange
 
 priceChanges :: SQL.Connection -> IO [PriceChange]
-priceChanges c = SQL.query c $(embedStringFile "./leads.sql") ()
+priceChanges c = SQL.query c $(embedStringFile "./price-changes.sql") ()
 
 scrapeAll :: SQL.Connection -> IO ()
 scrapeAll conn = do
