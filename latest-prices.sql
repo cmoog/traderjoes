@@ -9,4 +9,5 @@ FROM (
   FROM items
 ) tmp
 WHERE
-  rn = 1 AND retail_price != "0.01";
+  rn = 1 AND retail_price != "0.01"
+ORDER BY item_title;
