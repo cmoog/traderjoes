@@ -66,10 +66,9 @@ renderPage page = renderHtml $ H.html $ do
     H.toMarkup page
 
 displayDBItem :: DBItem -> H.Html
-displayDBItem (DBItem {ditem_title, dretail_price, dsku}) = H.html $ do
-  H.tr $ do
-    H.td $ H.a H.! A.href (productUrl dsku) H.! A.target "_blank" $ H.toHtml ditem_title
-    H.td $ H.toHtml dretail_price
+displayDBItem (DBItem {ditem_title, dretail_price, dsku}) = H.tr $ do
+  H.td $ H.a H.! A.href (productUrl dsku) H.! A.target "_blank" $ H.toHtml ditem_title
+  H.td $ H.toHtml dretail_price
 
 displayPriceChange :: PriceChange -> H.Html
 displayPriceChange (PriceChange {pitem_title, pbefore_price, pafter_price, pafter_date, psku}) = H.html $ do
