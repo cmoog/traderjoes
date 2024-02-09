@@ -39,21 +39,25 @@ a:hover {
   padding-bottom: 0.5rem;
   white-space: nowrap;
 }
+
 .table td {
   overflow: hidden;
   padding: 0.3rem 0.4rem 0.1rem;
   text-overflow: ellipsis;
   border: 0.08333rem solid #bfbfbf;
 }
+
 .table th {
   font-weight: bold;
   font-size: 1.25em;
   padding: 0.3rem 0.4rem 0;
   border-bottom: 0.08333rem solid black;
 }
+
 .table tbody th {
   border: 0.08333rem solid #bfbfbf;
 }
+
 .table-gray {
   font-size: 1em !important;
   border-top: 2px dotted #ddd;
@@ -61,3 +65,12 @@ a:hover {
   background: #fff;
   box-shadow: 2px 2px #ddd;
 }
+
+td.green {
+  background-color: rgb(189,223,206);
+}
+
+td.red {
+  background-color: rgb(240,201,196);
+}
+

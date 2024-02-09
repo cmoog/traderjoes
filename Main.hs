@@ -21,6 +21,7 @@ import Text.Blaze.Html.Renderer.Utf8 (renderHtml)
 import Text.Blaze.Html5 qualified as H
 import Text.Blaze.Html5.Attributes qualified as A
 import Text.Blaze.Internal qualified as A
+import Text.Read (readMaybe)
 
 main :: IO ()
 main = do
@@ -78,7 +79,13 @@ displayPriceChange (PriceChange {pitem_title, pbefore_price, pafter_price, pafte
   H.td $ H.toHtml pafter_date
   H.td $ H.a H.! A.href (productUrl psku) H.! A.target "_blank" $ H.toHtml pitem_title
   H.td $ H.toHtml pbefore_price
-  H.td $ H.toHtml pafter_price
+  H.td H.! A.class_ (H.toValue $ priceChangeClass (pbefore_price, pafter_price)) $ H.toHtml pafter_price
+
+priceChangeClass :: (String, String) -> String
+priceChangeClass (before, after) = fromMaybe "" $ do
+  beforeNum <- readMaybe before :: Maybe Float
+  afterNum <- readMaybe after :: Maybe Float
+  return $ if beforeNum > afterNum then "green" else "red"
 
 productUrl :: String -> H.AttributeValue
 productUrl sku = H.toValue $ "https://traderjoes.com/home/products/pdp/" ++ sku
