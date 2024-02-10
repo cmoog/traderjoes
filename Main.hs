@@ -42,13 +42,13 @@ main = do
             H.a H.! A.class_ "underline" H.! A.href "https://data.traderjoesprices.com/dump.csv" H.! download "traderjoes-dump.csv" $ "Download full history (.csv)"
             H.h1 "Price Changes"
             H.table H.! A.class_ "table table-striped table-gray" $ do
-              H.thead . H.tr . H.toMarkup $ H.th <$> (H.toMarkup <$> ["Date Changed" :: String, "Item Name", "Old Price", "New Price"])
-              H.toMarkup $ displayPriceChange <$> changes
+              H.thead . H.tr . H.toMarkup $ H.th . H.toMarkup <$> ["Date Changed" :: String, "Item Name", "Old Price", "New Price"]
+              H.tbody . H.toMarkup $ displayPriceChange <$> changes
             H.h1 "All Items"
             H.table H.! A.class_ "table table-striped table-gray" $ do
-              H.thead . H.tr . H.toMarkup $ H.th <$> (H.toMarkup <$> ["Item Name" :: String, "Retail Price"])
-              H.toMarkup $ displayDBItem <$> prices
-      setupSiteDirectory
+              H.thead . H.tr . H.toMarkup $ H.th . H.toMarkup <$> ["Item Name" :: String, "Retail Price"]
+              H.tbody . H.toMarkup $ displayDBItem <$> prices
+      setupCleanDirectory "site"
       L.writeFile "site/index.html" html
     Just "fetch" -> do
       hPutStrLn stderr "running"
@@ -145,9 +145,9 @@ showTime = do
 download :: H.AttributeValue -> H.Attribute
 download = A.attribute "download" " download=\""
 
--- | create an empty site directory, deleting it beforehand if it already exists
-setupSiteDirectory :: IO ()
-setupSiteDirectory = do
-  siteDirectoryExists <- doesDirectoryExist "site"
-  when siteDirectoryExists $ removeDirectoryRecursive "site"
-  createDirectory "site"
+-- | create an empty directory, deleting it beforehand if it already exists
+setupCleanDirectory :: String -> IO ()
+setupCleanDirectory dir = do
+  siteDirectoryExists <- doesDirectoryExist dir
+  when siteDirectoryExists $ removeDirectoryRecursive dir
+  createDirectory dir
