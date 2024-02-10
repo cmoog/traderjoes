@@ -14,7 +14,7 @@ import Data.Time (getCurrentTime, getCurrentTimeZone, utcToLocalTime)
 import Database.SQLite.Simple qualified as SQL
 import GHC.Generics
 import Prices (Item (..), allItems)
-import System.Directory (createDirectory, removeDirectoryRecursive)
+import System.Directory (createDirectory, doesDirectoryExist, removeDirectoryRecursive)
 import System.Environment (getArgs)
 import System.IO
 import Text.Blaze.Html.Renderer.Utf8 (renderHtml)
@@ -48,8 +48,7 @@ main = do
             H.table H.! A.class_ "table table-striped table-gray" $ do
               H.thead . H.tr . H.toMarkup $ H.th <$> (H.toMarkup <$> ["Item Name" :: String, "Retail Price"])
               H.toMarkup $ displayDBItem <$> prices
-      removeDirectoryRecursive "site"
-      createDirectory "site"
+      setupSiteDirectory
       L.writeFile "site/index.html" html
     Just "fetch" -> do
       hPutStrLn stderr "running"
@@ -145,3 +144,10 @@ showTime = do
 -- | this should be patched upstream in Blaze
 download :: H.AttributeValue -> H.Attribute
 download = A.attribute "download" " download=\""
+
+-- | create an empty site directory, deleting it beforehand if it already exists
+setupSiteDirectory :: IO ()
+setupSiteDirectory = do
+  siteDirectoryExists <- doesDirectoryExist "site"
+  when siteDirectoryExists $ removeDirectoryRecursive "site"
+  createDirectory "site"
