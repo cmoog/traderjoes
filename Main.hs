@@ -102,7 +102,7 @@ instance SQL.FromRow DBItem
 instance SQL.ToRow DBItem
 
 latestPrices :: SQL.Connection -> IO [DBItem]
-latestPrices conn = SQL.query conn $(embedStringFile "./latest-prices.sql") ()
+latestPrices conn = SQL.query conn $(embedStringFile "./sql/latest-prices.sql") ()
 
 data PriceChange = PriceChange
   { psku :: String,
@@ -117,7 +117,7 @@ data PriceChange = PriceChange
 instance SQL.FromRow PriceChange
 
 priceChanges :: SQL.Connection -> IO [PriceChange]
-priceChanges c = SQL.query c $(embedStringFile "./price-changes.sql") ()
+priceChanges c = SQL.query c $(embedStringFile "./sql/price-changes.sql") ()
 
 scrapeAll :: SQL.Connection -> IO ()
 scrapeAll conn = do
@@ -127,7 +127,7 @@ scrapeAll conn = do
 openDB :: IO SQL.Connection
 openDB = do
   conn <- SQL.open "traderjoes.db"
-  SQL.execute_ conn $(embedStringFile "./schema.sql")
+  SQL.execute_ conn $(embedStringFile "./sql/schema.sql")
   return conn
 
 insert :: SQL.Connection -> Item -> IO ()
