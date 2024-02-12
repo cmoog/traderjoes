@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE GHC2021 #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# OPTIONS_GHC -Wall #-}
@@ -30,32 +30,36 @@ main = do
   conn <- openDB
   case listToMaybe args of
     Just "gen" -> do
-      prices <- latestPrices conn
       changes <- priceChanges conn
+      allitems <- latestPrices conn
       SQL.close conn
       ts <- showTime
-      let html = renderPage $ do
-            H.i . H.toMarkup $ "Last updated: " ++ ts
-            H.br
-            H.a H.! A.class_ "underline" H.! A.href "https://github.com/cmoog/traderjoes" H.! A.target "_blank" $ "Source code"
-            H.br
-            H.a H.! A.class_ "underline" H.! A.href "https://data.traderjoesprices.com/dump.csv" H.! download "traderjoes-dump.csv" $ "Download full history (.csv)"
-            H.h1 "Price Changes"
-            H.table H.! A.class_ "table table-striped table-gray" $ do
-              H.thead . H.tr . H.toMarkup $ H.th . H.toMarkup <$> ["Date Changed" :: String, "Item Name", "Old Price", "New Price"]
-              H.tbody . H.toMarkup $ displayPriceChange <$> changes
-            H.h1 "All Items"
-            H.table H.! A.class_ "table table-striped table-gray" $ do
-              H.thead . H.tr . H.toMarkup $ H.th . H.toMarkup <$> ["Item Name" :: String, "Retail Price"]
-              H.tbody . H.toMarkup $ displayDBItem <$> prices
+      let html = renderPage $ pageBody changes allitems ts
       setupCleanDirectory "site"
       L.writeFile "site/index.html" html
     Just "fetch" -> do
       hPutStrLn stderr "running"
-      scrapeAll conn
+      items <- allItems
+      mapM_ (insert conn) items
       SQL.close conn
       hPutStrLn stderr "done"
     _ -> fail "run with 'fetch', 'gen'"
+
+pageBody :: [PriceChange] -> [DBItem] -> String -> H.Html
+pageBody changes items timestamp = do
+  H.i . H.toMarkup $ "Last updated: " ++ timestamp
+  H.br
+  H.a H.! A.class_ "underline" H.! A.href "https://github.com/cmoog/traderjoes" H.! A.target "_blank" $ "Source code"
+  H.br
+  H.a H.! A.class_ "underline" H.! A.href "https://data.traderjoesprices.com/dump.csv" H.! download "traderjoes-dump.csv" $ "Download full history (.csv)"
+  H.h1 "Price Changes"
+  H.table H.! A.class_ "table table-striped table-gray" $ do
+    H.thead . H.tr . H.toMarkup $ H.th <$> ["Date Changed" :: H.Html, "Item Name", "Old Price", "New Price"]
+    H.tbody . H.toMarkup $ displayPriceChange <$> changes
+  H.h1 "All Items"
+  H.table H.! A.class_ "table table-striped table-gray" $ do
+    H.thead . H.tr . H.toMarkup $ H.th <$> ["Item Name" :: H.Html, "Retail Price"]
+    H.tbody . H.toMarkup $ displayDBItem <$> items
 
 renderPage :: (H.ToMarkup a) => a -> ByteString
 renderPage page = renderHtml $ H.html $ do
@@ -117,12 +121,7 @@ data PriceChange = PriceChange
 instance SQL.FromRow PriceChange
 
 priceChanges :: SQL.Connection -> IO [PriceChange]
-priceChanges c = SQL.query c $(embedStringFile "./sql/price-changes.sql") ()
-
-scrapeAll :: SQL.Connection -> IO ()
-scrapeAll conn = do
-  items <- allItems
-  mapM_ (insert conn) items
+priceChanges conn = SQL.query conn $(embedStringFile "./sql/price-changes.sql") ()
 
 openDB :: IO SQL.Connection
 openDB = do
@@ -146,7 +145,7 @@ download :: H.AttributeValue -> H.Attribute
 download = A.attribute "download" " download=\""
 
 -- | create an empty directory, deleting it beforehand if it already exists
-setupCleanDirectory :: String -> IO ()
+setupCleanDirectory :: FilePath -> IO ()
 setupCleanDirectory dir = do
   siteDirectoryExists <- doesDirectoryExist dir
   when siteDirectoryExists $ removeDirectoryRecursive dir

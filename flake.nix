@@ -9,9 +9,16 @@
       (system:
         let
           pkgs = import nixpkgs { inherit system; };
+          formatter = with pkgs; writeShellScriptBin "fmt.sh" ''
+            ${nixpkgs-fmt}/bin/nixpkgs-fmt .
+            ${ormolu}/bin/ormolu --mode inplace $(git ls-files "*.hs")
+            for file in $(git ls-files "*.sql"); do
+              ${nodePackages.sql-formatter}/bin/sql-formatter --fix $file
+            done
+          '';
         in
         rec {
-          formatter = pkgs.nixpkgs-fmt;
+          inherit formatter;
           packages.default = pkgs.callPackage ./. { };
           devShells.default = with pkgs; mkShell {
             packages = [

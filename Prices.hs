@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE GHC2021 #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# OPTIONS_GHC -Wall #-}
@@ -100,7 +100,6 @@ headers =
     ("content-type", "application/json"),
     ("pragma", "no-cache"),
     ("accept-encoding", "gzip, deflate, br"),
-    ("referrer", "https://www.traderjoes.com/home/products/pdp/organic-ground-beef-8515-092558"),
     ("sec-ch-ua", "\"Not_A Brand\";v=\"8\", \"Chromium\";v=\"120\", \"Google Chrome\";v=\"120\""),
     ("sec-ch-ua-mobile", "?0"),
     ("sec-ch-ua-platform", "\"macOS\""),
