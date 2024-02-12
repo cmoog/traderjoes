@@ -52,6 +52,10 @@ pageBody changes items timestamp = do
   H.a H.! A.class_ "underline" H.! A.href "https://github.com/cmoog/traderjoes" H.! A.target "_blank" $ "Source code"
   H.br
   H.a H.! A.class_ "underline" H.! A.href "https://data.traderjoesprices.com/dump.csv" H.! download "traderjoes-dump.csv" $ "Download full history (.csv)"
+  H.br
+  H.br
+  H.strong H.! A.style "font-size: 1.15em;" $ do
+    H.i "Disclaimer: This website is not affiliated, associated, authorized, endorsed by, or in any way officially connected with Trader Joe's, or any of its subsidiaries or its affiliates. All prices are sourced from Trader Joe's South Loop in Chicago, IL (store code 701). There may be regional price differences from those listed on this site. This website may include discontinued or unavailable products."
   H.h1 "Price Changes"
   H.table H.! A.class_ "table table-striped table-gray" $ do
     H.thead . H.tr . H.toMarkup $ H.th <$> ["Date Changed" :: H.Html, "Item Name", "Old Price", "New Price"]
