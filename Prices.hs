@@ -3,7 +3,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# OPTIONS_GHC -Wall #-}
 
-module Prices (allItems, Item (..)) where
+module Prices (allItemsByStore, Item (..)) where
 
 import Control.Monad (join, when)
 import Data.Aeson
@@ -24,7 +24,8 @@ data Item = Item
   { retail_price :: String,
     item_title :: String,
     sku :: String,
-    url_key :: String
+    url_key :: String,
+    availability :: String
   }
   deriving (Generic, Show)
 
@@ -59,20 +60,20 @@ instance ToJSON Request
 
 instance ToJSON Variables
 
-allItems :: IO [Item]
-allItems = do
-  items <- mapM itemsInPage [1 .. 25]
+allItemsByStore :: String -> IO [Item]
+allItemsByStore store = do
+  items <- mapM (itemsByStore store) [1 .. 25]
   return . join . catMaybes $ items
 
-itemsInPage :: Int -> IO (Maybe [Item])
-itemsInPage page = do
+itemsByStore :: String -> Int -> IO (Maybe [Item])
+itemsByStore storeCode page = do
   hPutStrLn stderr $ "requesting page: " ++ show page
   let request =
         Request
           { operationName = "SearchProduct",
             variables =
               Variables
-                { storeCode = "701",
+                { storeCode = storeCode,
                   published = "1",
                   currentPage = page,
                   pageSize = 100

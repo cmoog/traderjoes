@@ -13,7 +13,7 @@ import Data.Maybe
 import Data.Time (getCurrentTime, getCurrentTimeZone, utcToLocalTime)
 import Database.SQLite.Simple qualified as SQL
 import GHC.Generics
-import Prices (Item (..), allItems)
+import Prices (Item (..), allItemsByStore)
 import System.Directory (createDirectory, doesDirectoryExist, removeDirectoryRecursive)
 import System.Environment (getArgs)
 import System.IO
@@ -39,8 +39,10 @@ main = do
       L.writeFile "site/index.html" html
     Just "fetch" -> do
       hPutStrLn stderr "running"
-      items <- allItems
-      mapM_ (insert conn) items
+      -- Store code 701 is the South Loop Chicago location.
+      let store = "701"
+      items <- allItemsByStore store
+      mapM_ (insert conn store) items
       SQL.close conn
       hPutStrLn stderr "done"
     _ -> fail "run with 'fetch', 'gen'"
@@ -101,7 +103,8 @@ data DBItem = DBItem
   { dsku :: String,
     ditem_title :: String,
     dretail_price :: String,
-    dinserted_at :: String
+    dinserted_at :: String,
+    dstore_code :: String
   }
   deriving (Generic, Show)
 
@@ -110,7 +113,7 @@ instance SQL.FromRow DBItem
 instance SQL.ToRow DBItem
 
 latestPrices :: SQL.Connection -> IO [DBItem]
-latestPrices conn = SQL.query conn $(embedStringFile "./sql/latest-prices.sql") ()
+latestPrices conn = SQL.query_ conn $(embedStringFile "./sql/latest-prices.sql")
 
 data PriceChange = PriceChange
   { psku :: String,
@@ -118,14 +121,15 @@ data PriceChange = PriceChange
     pbefore_price :: String,
     pafter_price :: String,
     pbefore_date :: String,
-    pafter_date :: String
+    pafter_date :: String,
+    pstore_code :: String
   }
   deriving (Generic, Show)
 
 instance SQL.FromRow PriceChange
 
 priceChanges :: SQL.Connection -> IO [PriceChange]
-priceChanges conn = SQL.query conn $(embedStringFile "./sql/price-changes.sql") ()
+priceChanges conn = SQL.query_ conn $(embedStringFile "./sql/price-changes.sql")
 
 openDB :: IO SQL.Connection
 openDB = do
@@ -133,9 +137,9 @@ openDB = do
   SQL.execute_ conn $(embedStringFile "./sql/schema.sql")
   return conn
 
-insert :: SQL.Connection -> Item -> IO ()
-insert conn (Item {sku, item_title, retail_price}) =
-  SQL.execute conn "INSERT INTO items (sku, retail_price, item_title, inserted_at) VALUES (?, ?, ?, DATETIME('now'))" (sku, retail_price, item_title)
+insert :: SQL.Connection -> String -> Item -> IO ()
+insert conn store (Item {sku, item_title, retail_price, availability}) =
+  SQL.execute conn "INSERT INTO items (sku, retail_price, item_title, store_code, availability, inserted_at) VALUES (?, ?, ?, ?, ?, DATETIME('now'))" (sku, retail_price, item_title, store, availability)
 
 -- | show a timestamp in the current system timezone
 showTime :: IO String

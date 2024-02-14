@@ -1,4 +1,4 @@
-query SearchProducts($pageSize: Int, $currentPage: Int, $storeCode: String = "701", $published: String = "1") {
+query SearchProducts($pageSize: Int, $currentPage: Int, $storeCode: String, $published: String = "1") {
   products(
     filter: {store_code: {eq: $storeCode}, published: {eq: $published}}
     pageSize: $pageSize
