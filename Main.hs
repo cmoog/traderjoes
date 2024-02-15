@@ -16,6 +16,7 @@ import GHC.Generics
 import Prices (Item (..), allItemsByStore)
 import System.Directory (createDirectory, doesDirectoryExist, removeDirectoryRecursive)
 import System.Environment (getArgs)
+import System.Exit (exitFailure)
 import System.IO
 import Text.Blaze.Html.Renderer.Utf8 (renderHtml)
 import Text.Blaze.Html5 qualified as H
@@ -23,10 +24,20 @@ import Text.Blaze.Html5.Attributes qualified as A
 import Text.Blaze.Internal qualified as A
 import Text.Read (readMaybe)
 
+help :: String
+help =
+  "Usage:\n\
+  \  traderjoes fetch\n\
+  \  traderjoes gen\
+  \"
+
+helpExit :: IO ()
+helpExit = printlog help >> exitFailure
+
 main :: IO ()
 main = do
   args <- getArgs
-  when (length args /= 1) $ fail "provide exactly 1 argument ('fetch' | 'gen')"
+  when (length args /= 1) helpExit
   conn <- openDB
   case listToMaybe args of
     Just "gen" -> do
@@ -36,16 +47,23 @@ main = do
       ts <- showTime
       let html = renderPage $ pageBody changes allitems ts
       setupCleanDirectory "site"
+      printlog "writing to ./site"
       L.writeFile "site/index.html" html
     Just "fetch" -> do
-      hPutStrLn stderr "running"
+      printlog "running..."
       -- Store code 701 is the South Loop Chicago location.
       let store = "701"
       items <- allItemsByStore store
+      printlog $ "fetched items: " <> (show . length $ items)
+      printlog "inserting into database..."
       mapM_ (insert conn store) items
+      changeCount <- SQL.totalChanges conn
+      printlog $ "changed rows: " <> show changeCount
       SQL.close conn
-      hPutStrLn stderr "done"
-    _ -> fail "run with 'fetch', 'gen'"
+    _ -> helpExit
+
+printlog :: String -> IO ()
+printlog = hPutStrLn stderr
 
 pageBody :: [PriceChange] -> [DBItem] -> String -> H.Html
 pageBody changes items timestamp = do

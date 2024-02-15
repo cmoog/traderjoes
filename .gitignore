@@ -4,5 +4,6 @@
 *.o
 *.dyn_o
 *.dyn_hi
+*.log
 Main
 site/

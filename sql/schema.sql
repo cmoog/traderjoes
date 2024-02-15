@@ -7,8 +7,3 @@ CREATE TABLE
     store_code text,
     availability text
   );
-
-/*
-ALTER TABLE items ADD store_code text;
-ALTER TABLE items ADD availability text;
-*/

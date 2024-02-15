@@ -11,11 +11,13 @@ requesting page 1
 requesting page 2
 ...
 
-$ sqlite3 traderjoes.db
-sqlite> select * from items order by item_title limit 3;
-093200|4.49|100% Colombian Instant Coffee|2024-01-21 22:45:30
-156933|3.99|100% Mango Juice from Carabao Mangoes|2024-01-21 22:45:33
-066569|3.99|100% Orange Juice No Pulp|2024-01-21 22:45:28
+$ sqlite3 traderjoes.db -csv -header
+sqlite> SELECT * FROM items ORDER BY inserted_at DESC LIMIT 4;
+sku,retail_price,item_title,inserted_at,store_code,availability
+055691,3.49,"Scandinavian Swimmers","2024-02-15 14:31:29",701,1
+063192,3.99,"Cauliflower Pancakes","2024-02-15 14:31:29",701,1
+063486,2.99,"Organic Kansas City Style BBQ Sauce","2024-02-15 14:31:29",701,1
+063277,1.49,"Red Chili Scalloped Crackers","2024-02-15 14:31:29",701,0
 
 $ nix run . -- gen
 # generates site in ./site
