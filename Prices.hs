@@ -12,7 +12,6 @@ import Data.FileEmbed (embedStringFile)
 import Data.Maybe
 import GHC.Generics
 import Network.HTTP.Simple qualified as HTTP
-import System.IO
 
 newtype Response = Response {rdata :: Data} deriving (Generic, Show)
 
@@ -67,7 +66,6 @@ allItemsByStore store = do
 
 itemsByStore :: String -> Int -> IO (Maybe [Item])
 itemsByStore storeCode page = do
-  hPutStrLn stderr $ "requesting page: " ++ show page
   let request =
         Request
           { operationName = "SearchProduct",

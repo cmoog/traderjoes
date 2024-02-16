@@ -52,16 +52,27 @@ handleArgs ["fetch"] = do
   conn <- openDB
   printlog "running..."
   -- Store code 701 is the South Loop Chicago location.
-  let store = "701"
-  items <- allItemsByStore store
-  printlog $ "fetched items: " <> (show . length $ items)
-  printlog "inserting into database..."
-  mapM_ (insert conn store) items
-  changeCount <- SQL.totalChanges conn
-  printlog $ "changed rows: " <> show changeCount
+  let stores :: [String] =
+        [ "701", -- Chicago South Loop
+          "31", -- Lost Angeles
+          "546", -- East Village
+          "452" -- Austin Seaholm
+        ]
+  mapM_ (processStore conn) stores
   SQL.close conn
 handleArgs _ = printlog help >> exitFailure
 
+-- | fetch all items for the store and insert into the database
+processStore :: SQL.Connection -> String -> IO ()
+processStore conn store = do
+  items <- allItemsByStore store
+  printlog $ "fetched items (" <> store <> "): " <> (show . length $ items)
+  printlog $ "inserting into database (" <> store <> ")..."
+  mapM_ (insert conn store) items
+  changeCount <- SQL.totalChanges conn
+  printlog $ "changed rows (" <> store <> "): " <> show changeCount
+
+-- | generate the home page html body
 pageBody :: [PriceChange] -> [DBItem] -> String -> H.Html
 pageBody changes items timestamp = do
   H.i . H.toMarkup $ "Last updated: " ++ timestamp
@@ -82,6 +93,7 @@ pageBody changes items timestamp = do
     H.thead . H.tr . H.toMarkup $ H.th <$> ["Item Name" :: H.Html, "Retail Price"]
     H.tbody . H.toMarkup $ displayDBItem <$> items
 
+-- render the given page body with html head/styles/meta
 renderPage :: (H.ToMarkup a) => a -> ByteString
 renderPage page = renderHtml $ H.html $ do
   H.head $ do
@@ -93,11 +105,13 @@ renderPage page = renderHtml $ H.html $ do
     H.style $(embedStringFile "./style.css")
     H.toMarkup page
 
+-- | display the item as a table row
 displayDBItem :: DBItem -> H.Html
 displayDBItem (DBItem {ditem_title, dretail_price, dsku}) = H.tr $ do
   H.td $ H.a H.! A.href (productUrl dsku) H.! A.target "_blank" $ H.toHtml ditem_title
   H.td $ H.toHtml dretail_price
 
+-- | display the price change as a table row
 displayPriceChange :: PriceChange -> H.Html
 displayPriceChange (PriceChange {pitem_title, pbefore_price, pafter_price, pafter_date, psku}) = H.tr $ do
   H.td $ H.toHtml pafter_date
@@ -105,12 +119,14 @@ displayPriceChange (PriceChange {pitem_title, pbefore_price, pafter_price, pafte
   H.td $ H.toHtml pbefore_price
   H.td H.! A.class_ (H.toValue $ priceChangeClass (pbefore_price, pafter_price)) $ H.toHtml pafter_price
 
+-- | color the price change table cell based on whether the price increased vs. decreased
 priceChangeClass :: (String, String) -> String
 priceChangeClass (before, after) = fromMaybe "" $ do
   beforeNum <- readMaybe before :: Maybe Float
   afterNum <- readMaybe after :: Maybe Float
   return $ if beforeNum > afterNum then "green" else "red"
 
+-- link to the product detail page by `sku`
 productUrl :: String -> H.AttributeValue
 productUrl sku = H.toValue $ "https://traderjoes.com/home/products/pdp/" ++ sku
 
@@ -127,6 +143,7 @@ instance SQL.FromRow DBItem
 
 instance SQL.ToRow DBItem
 
+-- fetch the latest seen price for each `sku`
 latestPrices :: SQL.Connection -> IO [DBItem]
 latestPrices conn = SQL.query_ conn $(embedStringFile "./sql/latest-prices.sql")
 
@@ -143,6 +160,7 @@ data PriceChange = PriceChange
 
 instance SQL.FromRow PriceChange
 
+-- each change in price partitioned by sku and storeid
 priceChanges :: SQL.Connection -> IO [PriceChange]
 priceChanges conn = SQL.query_ conn $(embedStringFile "./sql/price-changes.sql")
 
