@@ -24,6 +24,9 @@ import Text.Blaze.Html5.Attributes qualified as A
 import Text.Blaze.Internal qualified as A
 import Text.Read (readMaybe)
 
+main :: IO ()
+main = getArgs >>= handleArgs
+
 help :: String
 help =
   "Usage:\n\
@@ -31,39 +34,33 @@ help =
   \  traderjoes gen\
   \"
 
-helpExit :: IO ()
-helpExit = printlog help >> exitFailure
-
-main :: IO ()
-main = do
-  args <- getArgs
-  when (length args /= 1) helpExit
-  conn <- openDB
-  case listToMaybe args of
-    Just "gen" -> do
-      changes <- priceChanges conn
-      allitems <- latestPrices conn
-      SQL.close conn
-      ts <- showTime
-      let html = renderPage $ pageBody changes allitems ts
-      setupCleanDirectory "site"
-      printlog "writing to ./site"
-      L.writeFile "site/index.html" html
-    Just "fetch" -> do
-      printlog "running..."
-      -- Store code 701 is the South Loop Chicago location.
-      let store = "701"
-      items <- allItemsByStore store
-      printlog $ "fetched items: " <> (show . length $ items)
-      printlog "inserting into database..."
-      mapM_ (insert conn store) items
-      changeCount <- SQL.totalChanges conn
-      printlog $ "changed rows: " <> show changeCount
-      SQL.close conn
-    _ -> helpExit
-
 printlog :: String -> IO ()
 printlog = hPutStrLn stderr
+
+handleArgs :: [String] -> IO ()
+handleArgs ["gen"] = do
+  conn <- openDB
+  changes <- priceChanges conn
+  allitems <- latestPrices conn
+  SQL.close conn
+  ts <- showTime
+  let html = renderPage $ pageBody changes allitems ts
+  setupCleanDirectory "site"
+  printlog "writing to ./site"
+  L.writeFile "site/index.html" html
+handleArgs ["fetch"] = do
+  conn <- openDB
+  printlog "running..."
+  -- Store code 701 is the South Loop Chicago location.
+  let store = "701"
+  items <- allItemsByStore store
+  printlog $ "fetched items: " <> (show . length $ items)
+  printlog "inserting into database..."
+  mapM_ (insert conn store) items
+  changeCount <- SQL.totalChanges conn
+  printlog $ "changed rows: " <> show changeCount
+  SQL.close conn
+handleArgs _ = printlog help >> exitFailure
 
 pageBody :: [PriceChange] -> [DBItem] -> String -> H.Html
 pageBody changes items timestamp = do
