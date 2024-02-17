@@ -83,18 +83,19 @@ pageBody changes items timestamp = do
   H.a ! A.class_ "underline" ! A.href "https://data.traderjoesprices.com/dump.csv" ! download "traderjoes-dump.csv" $ "Download full history (.csv)"
   H.br
   H.br
-  H.strong ! A.style "font-size: 1.15em;" $ do
+  H.strong ! A.style "font-size: 1.15em; font-family: serif" $ do
     H.i "Disclaimer: This website is not affiliated, associated, authorized, endorsed by, or in any way officially connected with Trader Joe's, or any of its subsidiaries or its affiliates. All prices are sourced from Trader Joe's South Loop in Chicago, IL (store code 701). There may be regional price differences from those listed on this site. This website may include discontinued or unavailable products."
   H.br
+  H.h1 "(Unofficial) Trader Joe's Price Tracking"
   H.form ! A.action "signup" ! A.class_ "signup-form" ! A.role "form" $ do
     H.label ! A.for "email" $ "Sign up for a weekly email of price changes."
     H.input ! A.required "" ! A.name "email" ! A.type_ "email" ! A.class_ "formInput input-lg" ! A.placeholder "example@gmail.com"
     H.button ! A.type_ "submit" ! A.class_ "btn primary" ! A.title "Email address" $ "Sign Up"
-  H.h1 "Price Changes"
+  H.h2 "Price Changes"
   H.table ! A.class_ "table table-striped table-gray" $ do
     H.thead . H.tr . H.toMarkup $ H.th <$> ["Date Changed" :: H.Html, "Item Name", "Old Price", "New Price"]
     H.tbody . H.toMarkup $ displayPriceChange <$> changes
-  H.h1 "All Items"
+  H.h2 "All Items"
   H.table ! A.class_ "table table-striped table-gray" $ do
     H.thead . H.tr . H.toMarkup $ H.th <$> ["Item Name" :: H.Html, "Retail Price"]
     H.tbody . H.toMarkup $ displayDBItem <$> items
