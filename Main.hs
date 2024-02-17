@@ -19,6 +19,7 @@ import System.Environment (getArgs)
 import System.Exit (exitFailure)
 import System.IO
 import Text.Blaze.Html.Renderer.Utf8 (renderHtml)
+import Text.Blaze.Html5 ((!))
 import Text.Blaze.Html5 qualified as H
 import Text.Blaze.Html5.Attributes qualified as A
 import Text.Blaze.Internal qualified as A
@@ -54,7 +55,7 @@ handleArgs ["fetch"] = do
   -- Store code 701 is the South Loop Chicago location.
   let stores :: [String] =
         [ "701", -- Chicago South Loop
-          "31", -- Lost Angeles
+          "31", -- Los Angeles
           "546", -- East Village
           "452" -- Austin Seaholm
         ]
@@ -77,19 +78,24 @@ pageBody :: [PriceChange] -> [DBItem] -> String -> H.Html
 pageBody changes items timestamp = do
   H.i . H.toMarkup $ "Last updated: " ++ timestamp
   H.br
-  H.a H.! A.class_ "underline" H.! A.href "https://github.com/cmoog/traderjoes" H.! A.target "_blank" $ "Source code"
+  H.a ! A.class_ "underline" ! A.href "https://github.com/cmoog/traderjoes" ! A.target "_blank" $ "Source code"
   H.br
-  H.a H.! A.class_ "underline" H.! A.href "https://data.traderjoesprices.com/dump.csv" H.! download "traderjoes-dump.csv" $ "Download full history (.csv)"
+  H.a ! A.class_ "underline" ! A.href "https://data.traderjoesprices.com/dump.csv" ! download "traderjoes-dump.csv" $ "Download full history (.csv)"
   H.br
   H.br
-  H.strong H.! A.style "font-size: 1.15em;" $ do
+  H.strong ! A.style "font-size: 1.15em;" $ do
     H.i "Disclaimer: This website is not affiliated, associated, authorized, endorsed by, or in any way officially connected with Trader Joe's, or any of its subsidiaries or its affiliates. All prices are sourced from Trader Joe's South Loop in Chicago, IL (store code 701). There may be regional price differences from those listed on this site. This website may include discontinued or unavailable products."
+  H.br
+  H.form ! A.action "signup" ! A.class_ "signup-form" ! A.role "form" $ do
+    H.label ! A.for "email" $ "Sign up for a weekly email of price changes."
+    H.input ! A.required "" ! A.name "email" ! A.type_ "email" ! A.class_ "formInput input-lg" ! A.placeholder "example@gmail.com"
+    H.button ! A.type_ "submit" ! A.class_ "btn primary" ! A.title "Email address" $ "Sign Up"
   H.h1 "Price Changes"
-  H.table H.! A.class_ "table table-striped table-gray" $ do
+  H.table ! A.class_ "table table-striped table-gray" $ do
     H.thead . H.tr . H.toMarkup $ H.th <$> ["Date Changed" :: H.Html, "Item Name", "Old Price", "New Price"]
     H.tbody . H.toMarkup $ displayPriceChange <$> changes
   H.h1 "All Items"
-  H.table H.! A.class_ "table table-striped table-gray" $ do
+  H.table ! A.class_ "table table-striped table-gray" $ do
     H.thead . H.tr . H.toMarkup $ H.th <$> ["Item Name" :: H.Html, "Retail Price"]
     H.tbody . H.toMarkup $ displayDBItem <$> items
 
@@ -97,9 +103,9 @@ pageBody changes items timestamp = do
 renderPage :: (H.ToMarkup a) => a -> ByteString
 renderPage page = renderHtml $ H.html $ do
   H.head $ do
-    H.meta H.! A.charset "UTF-8"
-    H.meta H.! A.name "viewport" H.! A.content "width=device-width, initial-scale=1.0"
-    H.meta H.! A.name "description" H.! A.content "Daily Tracking of Trader Joe's Price Changes"
+    H.meta ! A.charset "UTF-8"
+    H.meta ! A.name "viewport" ! A.content "width=device-width, initial-scale=1.0"
+    H.meta ! A.name "description" ! A.content "Daily Tracking of Trader Joe's Price Changes"
     H.title "Trader Joe's Prices"
   H.body $ do
     H.style $(embedStringFile "./style.css")
@@ -108,16 +114,16 @@ renderPage page = renderHtml $ H.html $ do
 -- | display the item as a table row
 displayDBItem :: DBItem -> H.Html
 displayDBItem (DBItem {ditem_title, dretail_price, dsku}) = H.tr $ do
-  H.td $ H.a H.! A.href (productUrl dsku) H.! A.target "_blank" $ H.toHtml ditem_title
+  H.td $ H.a ! A.href (productUrl dsku) ! A.target "_blank" $ H.toHtml ditem_title
   H.td $ H.toHtml dretail_price
 
 -- | display the price change as a table row
 displayPriceChange :: PriceChange -> H.Html
 displayPriceChange (PriceChange {pitem_title, pbefore_price, pafter_price, pafter_date, psku}) = H.tr $ do
   H.td $ H.toHtml pafter_date
-  H.td $ H.a H.! A.href (productUrl psku) H.! A.target "_blank" $ H.toHtml pitem_title
+  H.td $ H.a ! A.href (productUrl psku) ! A.target "_blank" $ H.toHtml pitem_title
   H.td $ H.toHtml pbefore_price
-  H.td H.! A.class_ (H.toValue $ priceChangeClass (pbefore_price, pafter_price)) $ H.toHtml pafter_price
+  H.td ! A.class_ (H.toValue $ priceChangeClass (pbefore_price, pafter_price)) $ H.toHtml pafter_price
 
 -- | color the price change table cell based on whether the price increased vs. decreased
 priceChangeClass :: (String, String) -> String

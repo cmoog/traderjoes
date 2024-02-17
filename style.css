@@ -12,6 +12,41 @@ a:hover {
   text-decoration: underline;
 }
 
+:root {
+  --black: #000;
+  --blue: #1660c1;
+  --dark-green: #137752;
+  --dark-navy: #00449e;
+  --dark-pink: #d5008f;
+  --dark-red: #e7040f;
+  --gold: #ffb700;
+  --gray: #777;
+  --green: #008458;
+  --hot-pink: #ff41b4;
+  --light-blue: #96ccff;
+  --light-blue: #96ccff;
+  --light-gray: #999;
+  --light-green: #9eebcf;
+  --light-pink: #ffa3d7;
+  --light-purple: #a463f2;
+  --light-red: #ff725c;
+  --light-yellow: #fbf1a9;
+  --lightest-blue: #cdecff;
+  --lightest-gray: #bfbfbf;
+  --navy: #001b44;
+  --orange: #e25600;
+  --pink: #ff80cc;
+  --purple: #5e2ca5;
+  --red: #e7040f;
+  --washed-gray: #ddd;
+  --washed-blue: #eff9ff;
+  --washed-green: #e8fdf5;
+  --washed-red: #ffecec;
+  --washed-yellow: #fffceb;
+  --white: #fff;
+  --yellow: #ffb700;
+}
+
 .table {
   width: 100%;
   border-spacing: 0;
@@ -74,3 +109,86 @@ td.red {
   background-color: rgb(240,201,196);
 }
 
+.formInput {
+  font-size: 14px;
+  top: -2px;
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: 2rem;
+  padding: 0.5rem 0.1rem 0.3rem 0.4rem;
+  color: black;
+  border: 0.08333rem solid black;
+  outline: none;
+  background: white;
+  background-image: none;
+  box-shadow: inset 2px 2px var(--washed-gray);
+
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.formInput:focus {
+  border-color: black;
+  box-shadow: 0 0 0 0.1rem rgba(0, 0, 0, 0.2);
+}
+
+.formInput::placeholder {
+  color: var(--gray);
+}
+
+.formInput.input-lg {
+  font-size: 1rem;
+  height: 2rem;
+  padding: 0.23334rem 0.6rem;
+}
+
+.btn {
+  position: relative;
+  top: -2px;
+  display: inline-block;
+  height: 2rem;
+  padding: 0.15rem 0.6rem 0;
+  cursor: pointer;
+  user-select: none;
+  text-align: center;
+  vertical-align: middle;
+  white-space: nowrap;
+  text-decoration: none;
+  color: black;
+  border: 0.08333rem solid black;
+  border-radius: 0;
+  outline: none;
+  background: white;
+  box-shadow: 2px 2px #bbb;
+  -webkit-appearance: none;
+  appearance: none;
+  fill: black;
+}
+
+.btn:focus {
+  box-shadow: 0 0 0 0.1rem rgba(0, 0, 0, 0.2);
+}
+
+.btn.primary {
+  color: white;
+  border-color: black;
+  background: black;
+}
+
+.signup-form {
+  display: flex;
+  max-width: 500px;
+  margin: 0 auto;
+  align-items: center;
+  gap: 10px;
+  border: 2px dotted black;
+  padding: 10px;
+  margin-top: 10px;
+}
+
+@media (width <= 500px) {
+  .signup-form {
+    flex-direction: column;
+  }
+}
