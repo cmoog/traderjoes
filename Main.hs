@@ -52,28 +52,29 @@ handleArgs ["gen"] = do
 handleArgs ["fetch"] = do
   conn <- openDB
   printlog "running..."
-  -- Store code 701 is the South Loop Chicago location.
-  let stores :: [String] =
+  let stores =
         [ "701", -- Chicago South Loop
           "31", -- Los Angeles
-          "546", -- East Village
+          "546", -- NYC East Village
           "452" -- Austin Seaholm
         ]
-  mapM_ (processStore conn) stores
+  mapM_ (scrapeStore conn) stores
+  printlog "done"
+  changeCount <- SQL.totalChanges conn
+  printlog $ "changed rows: " <> show changeCount
   SQL.close conn
 handleArgs _ = printlog help >> exitFailure
 
--- | fetch all items for the store and insert into the database
-processStore :: SQL.Connection -> String -> IO ()
-processStore conn store = do
+-- | Fetch all items for the store and insert into the given database.
+scrapeStore :: SQL.Connection -> String -> IO ()
+scrapeStore conn store = do
+  printlog $ "fetching items (store " <> store <> ")..."
   items <- allItemsByStore store
-  printlog $ "fetched items (" <> store <> "): " <> (show . length $ items)
-  printlog $ "inserting into database (" <> store <> ")..."
+  printlog $ "fetched items (store " <> store <> "): " <> (show . length $ items)
+  printlog $ "inserting into database (store " <> store <> ")..."
   mapM_ (insert conn store) items
-  changeCount <- SQL.totalChanges conn
-  printlog $ "changed rows (" <> store <> "): " <> show changeCount
 
--- | generate the home page html body
+-- | Generate the home page html body.
 pageBody :: [PriceChange] -> [DBItem] -> String -> H.Html
 pageBody changes items timestamp = do
   H.i . H.toMarkup $ "Last updated: " ++ timestamp
@@ -93,14 +94,14 @@ pageBody changes items timestamp = do
     H.button ! A.type_ "submit" ! A.class_ "btn primary" ! A.title "Email address" $ "Sign Up"
   H.h2 "Price Changes"
   H.table ! A.class_ "table table-striped table-gray" $ do
-    H.thead . H.tr . H.toMarkup $ H.th <$> ["Date Changed" :: H.Html, "Item Name", "Old Price", "New Price"]
+    H.thead . H.tr . H.toMarkup $ H.th <$> ["Date Changed", "Item Name", "Old Price", "New Price"]
     H.tbody . H.toMarkup $ displayPriceChange <$> changes
   H.h2 "All Items"
   H.table ! A.class_ "table table-striped table-gray" $ do
-    H.thead . H.tr . H.toMarkup $ H.th <$> ["Item Name" :: H.Html, "Retail Price"]
+    H.thead . H.tr . H.toMarkup $ H.th <$> ["Item Name", "Retail Price"]
     H.tbody . H.toMarkup $ displayDBItem <$> items
 
--- render the given page body with html head/styles/meta
+-- | Render the given page body with html head/styles/meta.
 renderPage :: (H.ToMarkup a) => a -> ByteString
 renderPage page = renderHtml $ H.html $ do
   H.head $ do
@@ -112,13 +113,13 @@ renderPage page = renderHtml $ H.html $ do
     H.style $(embedStringFile "./style.css")
     H.toMarkup page
 
--- | display the item as a table row
+-- | Display item as a table row.
 displayDBItem :: DBItem -> H.Html
 displayDBItem (DBItem {ditem_title, dretail_price, dsku}) = H.tr $ do
   H.td $ H.a ! A.href (productUrl dsku) ! A.target "_blank" $ H.toHtml ditem_title
   H.td $ H.toHtml dretail_price
 
--- | display the price change as a table row
+-- | Display the price change as a table row.
 displayPriceChange :: PriceChange -> H.Html
 displayPriceChange (PriceChange {pitem_title, pbefore_price, pafter_price, pafter_date, psku}) = H.tr $ do
   H.td $ H.toHtml pafter_date
@@ -126,14 +127,14 @@ displayPriceChange (PriceChange {pitem_title, pbefore_price, pafter_price, pafte
   H.td $ H.toHtml pbefore_price
   H.td ! A.class_ (H.toValue $ priceChangeClass (pbefore_price, pafter_price)) $ H.toHtml pafter_price
 
--- | color the price change table cell based on whether the price increased vs. decreased
+-- | Color the price change table cell based on whether the price increased or decreased.
 priceChangeClass :: (String, String) -> String
 priceChangeClass (before, after) = fromMaybe "" $ do
   beforeNum <- readMaybe before :: Maybe Float
   afterNum <- readMaybe after :: Maybe Float
   return $ if beforeNum > afterNum then "green" else "red"
 
--- link to the product detail page by `sku`
+-- | URL to the product detail page by `sku`.
 productUrl :: String -> H.AttributeValue
 productUrl sku = H.toValue $ "https://traderjoes.com/home/products/pdp/" ++ sku
 
@@ -150,7 +151,7 @@ instance SQL.FromRow DBItem
 
 instance SQL.ToRow DBItem
 
--- fetch the latest seen price for each `sku`
+-- | Fetch the latest seen price for each `sku`.
 latestPrices :: SQL.Connection -> IO [DBItem]
 latestPrices conn = SQL.query_ conn $(embedStringFile "./sql/latest-prices.sql")
 
@@ -167,7 +168,7 @@ data PriceChange = PriceChange
 
 instance SQL.FromRow PriceChange
 
--- each change in price partitioned by sku and storeid
+-- | Each change in item `retail_price` partitioned by `sku` and `store_code`.
 priceChanges :: SQL.Connection -> IO [PriceChange]
 priceChanges conn = SQL.query_ conn $(embedStringFile "./sql/price-changes.sql")
 
@@ -179,20 +180,23 @@ openDB = do
 
 insert :: SQL.Connection -> String -> Item -> IO ()
 insert conn store (Item {sku, item_title, retail_price, availability}) =
-  SQL.execute conn "INSERT INTO items (sku, retail_price, item_title, store_code, availability, inserted_at) VALUES (?, ?, ?, ?, ?, DATETIME('now'))" (sku, retail_price, item_title, store, availability)
+  SQL.execute
+    conn
+    "INSERT INTO items (sku, retail_price, item_title, store_code, availability, inserted_at) VALUES (?, ?, ?, ?, ?, DATETIME('now'))"
+    (sku, retail_price, item_title, store, availability)
 
--- | show a timestamp in the current system timezone
+-- | Show a timestamp in the current system timezone.
 showTime :: IO String
 showTime = do
   zone <- getCurrentTimeZone
   utc <- getCurrentTime
   return $ show (utcToLocalTime zone utc) <> " " <> show zone
 
--- | this should be patched upstream in Blaze
+-- this should be patched upstream in Blaze
 download :: H.AttributeValue -> H.Attribute
 download = A.attribute "download" " download=\""
 
--- | create an empty directory, deleting it beforehand if it already exists
+-- | Create an empty directory, deleting it beforehand if it already exists.
 setupCleanDirectory :: FilePath -> IO ()
 setupCleanDirectory dir = do
   siteDirectoryExists <- doesDirectoryExist dir

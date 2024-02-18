@@ -88,7 +88,7 @@ sendQuery query = do
   let req = HTTP.setRequestMethod "POST" . HTTP.setRequestBodyLBS encoded . HTTP.setRequestHeaders headers $ url
   resp <- HTTP.httpLBS req
   let statusCode = HTTP.getResponseStatusCode resp
-  when (statusCode /= 200) . fail $ show req ++ "\nrequest failed:\n" ++ show resp
+  when (statusCode /= 200) . fail $ show req <> "\nrequest failed:\n" <> show resp
   return $ HTTP.getResponseBody resp
 
 headers :: [HTTP.Header]

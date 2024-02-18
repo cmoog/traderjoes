@@ -6,7 +6,7 @@ All product prices are sourced from the Chicago South Loop location, store code 
 
 ```console
 $ nix run . -- fetch
-runnning
+running...
 requesting page 1
 requesting page 2
 ...
