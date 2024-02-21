@@ -10,7 +10,7 @@ import Data.ByteString.Lazy (ByteString)
 import Data.ByteString.Lazy qualified as L
 import Data.FileEmbed (embedStringFile)
 import Data.Maybe
-import Data.Time (getCurrentTime, getCurrentTimeZone, utcToLocalTime)
+import Data.Time (defaultTimeLocale, formatTime, getCurrentTime, getCurrentTimeZone, utcToLocalTime)
 import Database.SQLite.Simple qualified as SQL
 import GHC.Generics
 import Prices (Item (..), allItemsByStore)
@@ -190,7 +190,8 @@ showTime :: IO String
 showTime = do
   zone <- getCurrentTimeZone
   utc <- getCurrentTime
-  return $ show (utcToLocalTime zone utc) <> " " <> show zone
+  let local = utcToLocalTime zone utc
+  return $ formatTime defaultTimeLocale "%Y-%m-%d %H:%M:%S " local <> show zone
 
 -- this should be patched upstream in Blaze
 download :: H.AttributeValue -> H.Attribute
