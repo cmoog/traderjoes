@@ -10,10 +10,13 @@
         let
           pkgs = import nixpkgs { inherit system; };
           formatter = with pkgs; writeShellScriptBin "fmt.sh" ''
-            ${nixpkgs-fmt}/bin/nixpkgs-fmt .
-            ${ormolu}/bin/ormolu --mode inplace $(git ls-files "*.hs")
+            export PATH=$PATH:${lib.strings.makeBinPath [
+              nixpkgs-fmt ormolu nodePackages.sql-formatter
+            ]}
+            nixpkgs-fmt .
+            ormolu --mode inplace $(git ls-files "*.hs")
             for file in $(git ls-files "*.sql"); do
-              ${nodePackages.sql-formatter}/bin/sql-formatter --fix $file
+              sql-formatter --fix $file
             done
           '';
         in

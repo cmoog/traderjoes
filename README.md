@@ -1,11 +1,13 @@
 # Trader Joe's Price Tracking
 
 Updated daily at [traderjoesprices.com](https://traderjoesprices.com).
+[Download full price history (.csv)](https://data.traderjoesprices.com/dump.csv).
 
 All product prices are sourced from the Chicago South Loop location, store code `701`.
 
 ```console
-$ nix run . -- fetch
+$ nix shell github:cmoog/traderjoes
+$ traderjoes fetch
 running...
 requesting page 1
 requesting page 2
@@ -19,7 +21,7 @@ sku,retail_price,item_title,inserted_at,store_code,availability
 063486,2.99,"Organic Kansas City Style BBQ Sauce","2024-02-15 14:31:29",701,1
 063277,1.49,"Red Chili Scalloped Crackers","2024-02-15 14:31:29",701,0
 
-$ nix run . -- gen
+$ traderjoes gen
 # generates site in ./site
 ```
 

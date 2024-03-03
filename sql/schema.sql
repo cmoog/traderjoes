@@ -3,7 +3,7 @@ CREATE TABLE
     sku text,
     retail_price text,
     item_title text,
-    inserted_at integer,
+    inserted_at text,
     store_code text,
     availability text
   );
