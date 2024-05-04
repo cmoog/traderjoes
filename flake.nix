@@ -1,6 +1,6 @@
 {
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+    nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
     flake-utils.url = "github:numtide/flake-utils";
   };
 
@@ -24,14 +24,19 @@
           inherit formatter;
           packages.default = pkgs.callPackage ./. { };
           devShells.default = with pkgs; mkShell {
+            inputsFrom = [ packages.default ];
             packages = [
               haskell-language-server
               hlint
               nodePackages.wrangler
-              packages.default.buildInputs
               sqlite
             ];
           };
         }
-      );
+      ) // {
+      nixosModules.default = import ./module.nix;
+      overlays.default = final: prev: {
+        traderjoes = prev.callPackage ./. { };
+      };
+    };
 }
