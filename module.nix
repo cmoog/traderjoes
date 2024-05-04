@@ -15,7 +15,7 @@ in
       type = lib.types.str;
     };
   };
-  config = {
+  config = lib.mkIf cfg.enable {
     nixpkgs.overlays = [
       (_: prev: {
         traderjoes = prev.callPackage ./. { };
