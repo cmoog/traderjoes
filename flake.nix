@@ -20,12 +20,16 @@
             done
           '';
         in
-        rec {
+        {
           inherit formatter;
-          packages.default = pkgs.callPackage ./. { };
+          packages.default = pkgs.haskellPackages.callPackage ./. { };
           devShells.default = with pkgs; mkShell {
-            inputsFrom = [ packages.default ];
+            inputsFrom = [
+              (haskellPackages.shellFor { packages = p: [ (p.callPackage ./. { }) ]; })
+            ];
             packages = [
+              cabal-install
+              cabal2nix
               haskell-language-server
               hlint
               nodePackages.wrangler
@@ -36,7 +40,7 @@
       ) // {
       nixosModules.default = import ./module.nix;
       overlays.default = final: prev: {
-        traderjoes = prev.callPackage ./. { };
+        traderjoes = final.haskellPackages.callPackage ./. { };
       };
     };
 }

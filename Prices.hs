@@ -1,8 +1,3 @@
-{-# LANGUAGE GHC2021 #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TemplateHaskell #-}
-{-# OPTIONS_GHC -Wall #-}
-
 module Prices (allItemsByStore, Item (..)) where
 
 import Control.Monad (join, when)

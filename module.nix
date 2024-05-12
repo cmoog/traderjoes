@@ -36,8 +36,8 @@ in
         glibc # needed by wrangler
         traderjoes
       ];
-      script = builtins.readFile ./cron.bash;
       serviceConfig = {
+        ExecStart = ./cron.bash;
         Type = "oneshot";
         User = cfg.user;
         WorkingDirectory = cfg.workingDir;

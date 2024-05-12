@@ -1,0 +1,22 @@
+name: traderjoes
+version: 1.0.0
+build-type: Simple
+cabal-version: >= 1.10
+
+executable traderjoes
+  main-is: Main.hs
+  other-modules: Prices
+  default-language: GHC2021
+  default-extensions: OverloadedStrings
+    , TemplateHaskell
+  ghc-options: -Wall -Werror
+  build-depends: base
+    , aeson
+    , blaze-html
+    , blaze-markup
+    , bytestring
+    , directory
+    , file-embed
+    , http-conduit
+    , sqlite-simple
+    , time
