@@ -18,7 +18,7 @@ in
   config = lib.mkIf cfg.enable {
     nixpkgs.overlays = [
       (_: prev: {
-        traderjoes = prev.callPackage ./. { };
+        traderjoes = prev.haskellPackages.callPackage ./. { };
       })
     ];
     systemd.timers.traderjoes = {
