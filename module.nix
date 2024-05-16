@@ -18,7 +18,7 @@ in
   config = lib.mkIf cfg.enable {
     nixpkgs.overlays = [
       (_: prev: {
-        traderjoes = prev.haskellPackages.callPackage ./. { };
+        traderjoes = prev.haskellPackages.callCabal2nix "traderjoes" ./. { };
       })
     ];
     systemd.timers.traderjoes = {
@@ -31,9 +31,10 @@ in
     };
     systemd.services.traderjoes = {
       path = with pkgs; [
-        sqlite
-        nodePackages.wrangler
+        bash
         glibc # needed by wrangler
+        nodePackages.wrangler
+        sqlite
         traderjoes
       ];
       serviceConfig = {

@@ -48,10 +48,10 @@ handleArgs ["fetch"] = do
   conn <- openDB
   printlog "running..."
   let stores =
-        [ "701", -- Chicago South Loop
-          "31", -- Los Angeles
-          "546", -- NYC East Village
-          "452" -- Austin Seaholm
+        [ "701" -- Chicago South Loop
+        , "31" -- Los Angeles
+        , "546" -- NYC East Village
+        , "452" -- Austin Seaholm
         ]
   mapM_ (scrapeStore conn) stores
   printlog "done"
@@ -110,13 +110,13 @@ renderPage page = renderHtml $ H.html $ do
 
 -- | Display item as a table row.
 displayDBItem :: DBItem -> H.Html
-displayDBItem (DBItem {ditem_title, dretail_price, dsku}) = H.tr $ do
+displayDBItem (DBItem{ditem_title, dretail_price, dsku}) = H.tr $ do
   H.td $ H.a ! A.href (productUrl dsku) ! A.target "_blank" $ H.toHtml ditem_title
   H.td $ H.toHtml dretail_price
 
 -- | Display the price change as a table row.
 displayPriceChange :: PriceChange -> H.Html
-displayPriceChange (PriceChange {pitem_title, pbefore_price, pafter_price, pafter_date, psku}) = H.tr $ do
+displayPriceChange (PriceChange{pitem_title, pbefore_price, pafter_price, pafter_date, psku}) = H.tr $ do
   H.td $ H.toHtml pafter_date
   H.td $ H.a ! A.href (productUrl psku) ! A.target "_blank" $ H.toHtml pitem_title
   H.td $ H.toHtml pbefore_price
@@ -134,11 +134,11 @@ productUrl :: String -> H.AttributeValue
 productUrl sku = H.toValue $ "https://traderjoes.com/home/products/pdp/" ++ sku
 
 data DBItem = DBItem
-  { dsku :: String,
-    ditem_title :: String,
-    dretail_price :: String,
-    dinserted_at :: String,
-    dstore_code :: String
+  { dsku :: String
+  , ditem_title :: String
+  , dretail_price :: String
+  , dinserted_at :: String
+  , dstore_code :: String
   }
   deriving (Generic, Show)
 
@@ -151,13 +151,13 @@ latestPrices :: SQL.Connection -> IO [DBItem]
 latestPrices conn = SQL.query_ conn $(embedStringFile "./sql/latest-prices.sql")
 
 data PriceChange = PriceChange
-  { psku :: String,
-    pitem_title :: String,
-    pbefore_price :: String,
-    pafter_price :: String,
-    pbefore_date :: String,
-    pafter_date :: String,
-    pstore_code :: String
+  { psku :: String
+  , pitem_title :: String
+  , pbefore_price :: String
+  , pafter_price :: String
+  , pbefore_date :: String
+  , pafter_date :: String
+  , pstore_code :: String
   }
   deriving (Generic, Show)
 
@@ -174,7 +174,7 @@ openDB = do
   return conn
 
 insert :: SQL.Connection -> String -> Item -> IO ()
-insert conn store (Item {sku, item_title, retail_price, availability}) =
+insert conn store (Item{sku, item_title, retail_price, availability}) =
   SQL.execute
     conn
     "INSERT INTO items (sku, retail_price, item_title, store_code, availability, inserted_at) VALUES (?, ?, ?, ?, ?, DATETIME('now'))"

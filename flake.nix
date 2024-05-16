@@ -11,25 +11,22 @@
           pkgs = import nixpkgs { inherit system; };
           formatter = with pkgs; writeShellScriptBin "fmt.sh" ''
             export PATH=$PATH:${lib.strings.makeBinPath [
-              nixpkgs-fmt ormolu nodePackages.sql-formatter
+              nixpkgs-fmt haskellPackages.fourmolu nodePackages.sql-formatter
             ]}
             nixpkgs-fmt .
-            ormolu --mode inplace $(git ls-files "*.hs")
+            fourmolu --mode inplace --indentation=2 $(git ls-files '*.hs')
             for file in $(git ls-files "*.sql"); do
               sql-formatter --fix $file
             done
           '';
         in
-        {
+        rec {
           inherit formatter;
-          packages.default = pkgs.haskellPackages.callPackage ./. { };
+          packages.default = pkgs.haskellPackages.callCabal2nix "traderjoes" ./. { };
           devShells.default = with pkgs; mkShell {
-            inputsFrom = [
-              (haskellPackages.shellFor { packages = p: [ (p.callPackage ./. { }) ]; })
-            ];
+            inputsFrom = [ packages.default.env ];
             packages = [
               cabal-install
-              cabal2nix
               haskell-language-server
               hlint
               nodePackages.wrangler

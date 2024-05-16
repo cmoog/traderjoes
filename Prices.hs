@@ -15,18 +15,18 @@ newtype Data = Data {products :: Products} deriving (Generic, Show)
 data Products = Products {items :: [Item], total_count :: Int} deriving (Generic, Show)
 
 data Item = Item
-  { retail_price :: String,
-    item_title :: String,
-    sku :: String,
-    url_key :: String,
-    availability :: String
+  { retail_price :: String
+  , item_title :: String
+  , sku :: String
+  , url_key :: String
+  , availability :: String
   }
   deriving (Generic, Show)
 
 instance FromJSON Response where
   parseJSON (Object v) = do
     d <- v .: "data"
-    return Response {rdata = d}
+    return Response{rdata = d}
   parseJSON _ = fail "invalid response"
 
 instance FromJSON Data
@@ -36,17 +36,17 @@ instance FromJSON Products
 instance FromJSON Item
 
 data Request = Request
-  { operationName :: String,
-    variables :: Variables,
-    query :: String
+  { operationName :: String
+  , variables :: Variables
+  , query :: String
   }
   deriving (Generic, Show)
 
 data Variables = Variables
-  { storeCode :: String,
-    published :: String,
-    currentPage :: Int,
-    pageSize :: Int
+  { storeCode :: String
+  , published :: String
+  , currentPage :: Int
+  , pageSize :: Int
   }
   deriving (Generic, Show)
 
@@ -63,15 +63,15 @@ itemsByStore :: String -> Int -> IO (Maybe [Item])
 itemsByStore storeCode page = do
   let request =
         Request
-          { operationName = "SearchProduct",
-            variables =
+          { operationName = "SearchProduct"
+          , variables =
               Variables
-                { storeCode = storeCode,
-                  published = "1",
-                  currentPage = page,
-                  pageSize = 100
-                },
-            query = $(embedStringFile "./query.graphql")
+                { storeCode = storeCode
+                , published = "1"
+                , currentPage = page
+                , pageSize = 100
+                }
+          , query = $(embedStringFile "./query.graphql")
           }
   result <- sendQuery request
   return $ items . products . rdata <$> decode result
@@ -88,21 +88,21 @@ sendQuery query = do
 
 headers :: [HTTP.Header]
 headers =
-  [ ("accept", "*/*"),
-    ("accept-language", "en-US,en;q=0.9"),
-    ("cache-control", "no-cache"),
-    ("content-type", "application/json"),
-    ("pragma", "no-cache"),
-    ("accept-encoding", "gzip, deflate, br"),
-    ("sec-ch-ua", "\"Not_A Brand\";v=\"8\", \"Chromium\";v=\"120\", \"Google Chrome\";v=\"120\""),
-    ("sec-ch-ua-mobile", "?0"),
-    ("sec-ch-ua-platform", "\"macOS\""),
-    ("sec-fetch-dest", "empty"),
-    ("sec-fetch-mode", "cors"),
-    ("sec-fetch-site", "same-origin"),
-    ("referrer", "https://www.traderjoes.com/home/products/pdp/organic-ground-beef-8515-092558"),
-    ("referrerPolicy", "strict-origin-when-cross-origin"),
-    ("method", "POST"),
-    ("mode", "cors"),
-    ("credentials", "include")
+  [ ("accept", "*/*")
+  , ("accept-language", "en-US,en;q=0.9")
+  , ("cache-control", "no-cache")
+  , ("content-type", "application/json")
+  , ("pragma", "no-cache")
+  , ("accept-encoding", "gzip, deflate, br")
+  , ("sec-ch-ua", "\"Not_A Brand\";v=\"8\", \"Chromium\";v=\"120\", \"Google Chrome\";v=\"120\"")
+  , ("sec-ch-ua-mobile", "?0")
+  , ("sec-ch-ua-platform", "\"macOS\"")
+  , ("sec-fetch-dest", "empty")
+  , ("sec-fetch-mode", "cors")
+  , ("sec-fetch-site", "same-origin")
+  , ("referrer", "https://www.traderjoes.com/home/products/pdp/organic-ground-beef-8515-092558")
+  , ("referrerPolicy", "strict-origin-when-cross-origin")
+  , ("method", "POST")
+  , ("mode", "cors")
+  , ("credentials", "include")
   ]
