@@ -1,5 +1,6 @@
 module Main where
 
+import Control.Concurrent.Async (mapConcurrently_)
 import Control.Monad
 import Data.ByteString.Lazy (ByteString)
 import Data.ByteString.Lazy qualified as L
@@ -53,7 +54,7 @@ handleArgs ["fetch"] = do
         , "546" -- NYC East Village
         , "452" -- Austin Seaholm
         ]
-  mapM_ (scrapeStore conn) stores
+  mapConcurrently_ (scrapeStore conn) stores
   printlog "done"
   changeCount <- SQL.totalChanges conn
   printlog $ "changed rows: " <> show changeCount
