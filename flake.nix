@@ -14,20 +14,21 @@
               nixpkgs-fmt haskellPackages.fourmolu nodePackages.sql-formatter
             ]}
             nixpkgs-fmt .
-            fourmolu --mode inplace --indentation=2 $(git ls-files '*.hs')
+            fourmolu --mode inplace $(git ls-files '*.hs')
             for file in $(git ls-files "*.sql"); do
               sql-formatter --fix $file
             done
           '';
         in
-        rec {
+        {
           inherit formatter;
           packages.default = pkgs.haskellPackages.callCabal2nix "traderjoes" ./. { };
-          devShells.default = with pkgs; mkShell {
-            inputsFrom = [ packages.default.env ];
-            packages = [
+          devShells.default = pkgs.mkShell {
+            inputsFrom = [ self.packages.${system}.default.env ];
+            packages = with pkgs; [
               cabal-install
               haskell-language-server
+              haskellPackages.fourmolu
               hlint
               nodePackages.wrangler
               sqlite
