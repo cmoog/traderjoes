@@ -1,5 +1,6 @@
 module Prices (allItemsByStore, Item (..)) where
 
+import Control.Concurrent.Async
 import Control.Monad (join, when)
 import Data.Aeson
 import Data.ByteString.Lazy (ByteString)
@@ -56,7 +57,7 @@ instance ToJSON Variables
 
 allItemsByStore :: String -> IO [Item]
 allItemsByStore store = do
-  items <- mapM (itemsByStore store) [1 .. 25]
+  items <- mapConcurrently (itemsByStore store) [1 .. 25]
   return . join . catMaybes $ items
 
 itemsByStore :: String -> Int -> IO (Maybe [Item])

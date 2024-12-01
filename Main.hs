@@ -1,11 +1,13 @@
 module Main where
 
+import Control.Concurrent.Async
 import Control.Monad
 import Data.ByteString.Lazy (ByteString)
 import Data.ByteString.Lazy qualified as L
 import Data.FileEmbed (embedStringFile)
 import Data.Maybe
-import Data.Time (defaultTimeLocale, formatTime, getCurrentTime, getCurrentTimeZone, utcToLocalTime)
+import Data.Time (defaultTimeLocale, formatTime, getCurrentTimeZone, utcToLocalTime)
+import Data.Time.Clock.POSIX
 import Database.SQLite.Simple qualified as SQL
 import GHC.Generics
 import Prices (Item (..), allItemsByStore)
@@ -46,14 +48,15 @@ handleArgs ["gen"] = do
   L.writeFile "site/index.html" html
 handleArgs ["fetch"] = do
   conn <- openDB
-  printlog "running..."
   let stores =
         [ "701" -- Chicago South Loop
         , "31" -- Los Angeles
         , "546" -- NYC East Village
         , "452" -- Austin Seaholm
         ]
-  mapM_ (scrapeStore conn) stores
+  printlog $ "fetching stores: " <> show stores
+  SQL.withTransaction conn $
+    mapConcurrently_ (scrapeStore conn) stores
   printlog "done"
   changeCount <- SQL.totalChanges conn
   printlog $ "changed rows: " <> show changeCount
@@ -63,10 +66,7 @@ handleArgs _ = printlog help >> exitFailure
 -- | Fetch all items for the store and insert into the given database.
 scrapeStore :: SQL.Connection -> String -> IO ()
 scrapeStore conn store = do
-  printlog $ "fetching items (store " <> store <> ")..."
   items <- allItemsByStore store
-  printlog $ "fetched items (store " <> store <> "): " <> (show . length $ items)
-  printlog $ "inserting into database (store " <> store <> ")..."
   mapM_ (insert conn store) items
 
 -- | Generate the home page html body.
