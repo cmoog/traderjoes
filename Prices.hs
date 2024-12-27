@@ -27,7 +27,7 @@ data Item = Item
 instance FromJSON Response where
   parseJSON (Object v) = do
     d <- v .: "data"
-    return Response{rdata = d}
+    pure Response{rdata = d}
   parseJSON _ = fail "invalid response"
 
 instance FromJSON Data
@@ -58,7 +58,7 @@ instance ToJSON Variables
 allItemsByStore :: String -> IO [Item]
 allItemsByStore store = do
   items <- mapConcurrently (itemsByStore store) [1 .. 25]
-  return . join . catMaybes $ items
+  pure . join . catMaybes $ items
 
 itemsByStore :: String -> Int -> IO (Maybe [Item])
 itemsByStore storeCode page = do
@@ -75,7 +75,7 @@ itemsByStore storeCode page = do
           , query = $(embedStringFile "./query.graphql")
           }
   result <- sendQuery request
-  return $ items . products . rdata <$> decode result
+  pure $ items . products . rdata <$> decode result
 
 sendQuery :: Request -> IO ByteString
 sendQuery query = do
@@ -85,7 +85,7 @@ sendQuery query = do
   resp <- HTTP.httpLBS req
   let statusCode = HTTP.getResponseStatusCode resp
   when (statusCode /= 200) . fail $ show req <> "\nrequest failed:\n" <> show resp
-  return $ HTTP.getResponseBody resp
+  pure $ HTTP.getResponseBody resp
 
 headers :: [HTTP.Header]
 headers =

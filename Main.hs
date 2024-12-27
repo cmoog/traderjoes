@@ -103,6 +103,7 @@ renderPage page = renderHtml $ H.html $ do
     H.meta ! A.charset "UTF-8"
     H.meta ! A.name "viewport" ! A.content "width=device-width, initial-scale=1.0"
     H.meta ! A.name "description" ! A.content "Daily Tracking of Trader Joe's Price Changes"
+    H.meta ! A.name "keywords" ! A.content "trader joes, prices, price tracking"
     H.title "Trader Joe's Prices"
   H.body $ do
     H.style $(embedStringFile "./style.css")
@@ -127,7 +128,7 @@ priceChangeClass :: (String, String) -> String
 priceChangeClass (before, after) = fromMaybe "" $ do
   beforeNum <- readMaybe before :: Maybe Float
   afterNum <- readMaybe after :: Maybe Float
-  return $ if beforeNum > afterNum then "green" else "red"
+  pure $ if beforeNum > afterNum then "green" else "red"
 
 -- | URL to the product detail page by `sku`.
 productUrl :: String -> H.AttributeValue
@@ -171,7 +172,7 @@ openDB :: IO SQL.Connection
 openDB = do
   conn <- SQL.open "traderjoes.db"
   SQL.execute_ conn $(embedStringFile "./sql/schema.sql")
-  return conn
+  pure conn
 
 insert :: SQL.Connection -> String -> Item -> IO ()
 insert conn store (Item{sku, item_title, retail_price, availability}) =
@@ -186,7 +187,7 @@ showTime = do
   zone <- getCurrentTimeZone
   utc <- getCurrentTime
   let local = utcToLocalTime zone utc
-  return $ formatTime defaultTimeLocale "%Y-%m-%d %H:%M:%S " local <> show zone
+  pure $ formatTime defaultTimeLocale "%Y-%m-%d %H:%M:%S " local <> show zone
 
 -- this should be patched upstream in Blaze
 download :: H.AttributeValue -> H.Attribute
