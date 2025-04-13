@@ -103,6 +103,7 @@ headers =
   , ("sec-fetch-site", "same-origin")
   , ("referrer", "https://www.traderjoes.com/home/products/pdp/organic-ground-beef-8515-092558")
   , ("referrerPolicy", "strict-origin-when-cross-origin")
+  , ("origin", "https://www.traderjoes.com")
   , ("method", "POST")
   , ("mode", "cors")
   , ("credentials", "include")
