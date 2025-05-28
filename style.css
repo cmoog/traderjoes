@@ -196,3 +196,8 @@ td.red {
     flex-direction: column;
   }
 }
+
+.select2-container {
+  margin-left: 4px;
+  margin-right: 4px;
+}

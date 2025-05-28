@@ -22,30 +22,41 @@ WITH
       store_code
     FROM
       items
+  ),
+  EarliestPrices AS (
+    SELECT
+      sku,
+      NULL AS retail_price,
+      item_title,
+      retail_price AS next_price,
+      NULL AS inserted_at,
+      inserted_at AS next_inserted_at,
+      store_code
+    FROM
+      items
+    GROUP BY sku, store_code
+    HAVING inserted_at = min(inserted_at)
+  ),
+  Result AS (
+    SELECT * FROM EarliestPrices
+    UNION
+    SELECT * FROM PriceChanges
+    WHERE
+      retail_price IS NOT next_price
+      AND retail_price != "0.01"
+      AND next_price IS NOT "0.01"
   )
 SELECT
   sku,
   item_title,
   retail_price AS before_price,
   next_price AS after_price,
-  substr (
-    "--JanFebMarAprMayJunJulAugSepOctNovDec",
-    strftime ("%m", inserted_at) * 3,
-    3
-  ) || strftime (' %d, %Y', inserted_at) AS before_date,
-  substr (
-    "--JanFebMarAprMayJunJulAugSepOctNovDec",
-    strftime ("%m", next_inserted_at) * 3,
-    3
-  ) || strftime (' %d, %Y', next_inserted_at) AS after_date,
+  inserted_at AS before_date,
+  next_inserted_at AS after_date,
   store_code
 FROM
-  PriceChanges
+  Result
 WHERE
-  retail_price != next_price
-  AND next_price IS NOT NULL
-  AND retail_price != "0.01"
-  AND next_price != "0.01"
-  AND store_code = "701"
+  store_code = ?
 ORDER BY
   next_inserted_at DESC;
