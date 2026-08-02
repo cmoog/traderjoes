@@ -88,7 +88,8 @@ sendQuery req = do
   bracket
     (openTempFile tmpDir "traderjoes-response.json")
     (\(fp, h) -> hClose h >> removeFile fp)
-    ( \(fp, _) -> do
+    ( \(fp, h) -> do
+        hClose h
         let args =
               [ "-s"
               , "-X"
