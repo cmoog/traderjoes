@@ -1,13 +1,18 @@
 module Prices (allItemsByStore, Item (..)) where
 
-import Control.Concurrent.Async
-import Control.Monad (join, when)
+import Control.Exception (bracket)
+import Control.Monad (join)
 import Data.Aeson
 import Data.ByteString.Lazy (ByteString)
+import Data.ByteString.Lazy qualified as BL
+import Data.ByteString.Lazy.Char8 qualified as BLC8
 import Data.FileEmbed (embedStringFile)
 import Data.Maybe
 import GHC.Generics
-import Network.HTTP.Simple qualified as HTTP
+import System.Directory (getTemporaryDirectory, removeFile)
+import System.IO (hClose, openTempFile)
+import System.Process (proc, readCreateProcess)
+import Text.Read (readMaybe)
 
 newtype Response = Response {rdata :: Data} deriving (Generic, Show)
 
@@ -57,7 +62,7 @@ instance ToJSON Variables
 
 allItemsByStore :: String -> IO [Item]
 allItemsByStore store = do
-  items <- mapConcurrently (itemsByStore store) [1 .. 25]
+  items <- mapM (itemsByStore store) [1 .. 25]
   pure . join . catMaybes $ items
 
 itemsByStore :: String -> Int -> IO (Maybe [Item])
@@ -78,34 +83,35 @@ itemsByStore storeCode page = do
   pure $ items . products . rdata <$> decode result
 
 sendQuery :: Request -> IO ByteString
-sendQuery query = do
-  url <- HTTP.parseRequest "https://www.traderjoes.com/api/graphql"
-  let encoded = encode query
-  let req = HTTP.setRequestMethod "POST" . HTTP.setRequestBodyLBS encoded . HTTP.setRequestHeaders headers $ url
-  resp <- HTTP.httpLBS req
-  let statusCode = HTTP.getResponseStatusCode resp
-  when (statusCode /= 200) . fail $ show req <> "\nrequest failed:\n" <> show resp
-  pure $ HTTP.getResponseBody resp
-
-headers :: [HTTP.Header]
-headers =
-  [ ("accept", "*/*")
-  , ("accept-language", "en-US,en;q=0.9")
-  , ("cache-control", "no-cache")
-  , ("content-type", "application/json")
-  , ("pragma", "no-cache")
-  , ("accept-encoding", "gzip, deflate, br")
-  , ("user-agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36")
-  , ("sec-ch-ua", "\"Not_A Brand\";v=\"8\", \"Chromium\";v=\"120\", \"Google Chrome\";v=\"120\"")
-  , ("sec-ch-ua-mobile", "?0")
-  , ("sec-ch-ua-platform", "\"macOS\"")
-  , ("sec-fetch-dest", "empty")
-  , ("sec-fetch-mode", "cors")
-  , ("sec-fetch-site", "same-origin")
-  , ("referrer", "https://www.traderjoes.com/home/products/pdp/organic-ground-beef-8515-092558")
-  , ("referrerPolicy", "strict-origin-when-cross-origin")
-  , ("origin", "https://www.traderjoes.com")
-  , ("method", "POST")
-  , ("mode", "cors")
-  , ("credentials", "include")
-  ]
+sendQuery req = do
+  tmpDir <- getTemporaryDirectory
+  bracket
+    (openTempFile tmpDir "traderjoes-response.json")
+    (\(fp, h) -> hClose h >> removeFile fp)
+    ( \(fp, _) -> do
+        let args =
+              [ "-s"
+              , "-X"
+              , "POST"
+              , "-H"
+              , "content-type: application/json"
+              , "-H"
+              , "origin: https://www.traderjoes.com"
+              , "-H"
+              , "referer: https://www.traderjoes.com/home/products/pdp/organic-ground-beef-8515-092558"
+              , "--data-binary"
+              , "@-"
+              , "-o"
+              , fp
+              , "-w"
+              , "%{http_code}"
+              , "https://www.traderjoes.com/api/graphql"
+              ]
+        statusOut <- readCreateProcess (proc curlBin args) (BLC8.unpack (encode req))
+        respBody <- BL.readFile fp
+        case readMaybe statusOut :: Maybe Int of
+          Just 200 -> pure respBody
+          _ -> fail $ "curl-impersonate request failed, status=" <> statusOut <> "\nbody:\n" <> BLC8.unpack respBody
+    )
+ where
+  curlBin = "curl_chrome99"

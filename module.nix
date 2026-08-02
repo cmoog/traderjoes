@@ -36,6 +36,7 @@ in
         nodePackages.wrangler
         sqlite
         traderjoes
+        curl-impersonate
       ];
       serviceConfig = {
         ExecStart = ./cron.bash;

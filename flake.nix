@@ -13,7 +13,14 @@
     flake-utils.lib.eachDefaultSystem (
       system:
       let
-        pkgs = import nixpkgs { inherit system; };
+        pkgs = import nixpkgs {
+          inherit system;
+          config.permittedInsecurePackages = [
+            "curl-impersonate-0.5.4"
+            "curl-impersonate-ff-0.5.4"
+            "curl-impersonate-chrome-0.5.4"
+          ];
+        };
       in
       {
         packages.default = pkgs.haskellPackages.callCabal2nix "traderjoes" ./. { };
@@ -27,6 +34,7 @@
             nodePackages.wrangler
             sqlite
             haskellPackages.cabal-fmt
+            curl-impersonate
           ];
         };
       }

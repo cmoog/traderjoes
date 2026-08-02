@@ -21,6 +21,6 @@ executable traderjoes
     , bytestring
     , directory
     , file-embed
-    , http-conduit
+    , process
     , sqlite-simple
     , time
